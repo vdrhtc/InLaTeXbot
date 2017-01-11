@@ -2,6 +2,7 @@ from telegram.ext import Updater, CommandHandler, InlineQueryHandler, MessageHan
 from telegram import InlineQueryResultArticle, InputTextMessageContent, InlineQueryResultCachedPhoto, InlineQueryResult, TelegramError
 from src.LatexConverter import LatexConverter
 from src.PreambleManager import PreambleManager
+from src.ResourceManager import ResourceManager
 import logging 
 from logging.handlers import TimedRotatingFileHandler
 from multiprocessing import Process, Lock
@@ -13,6 +14,7 @@ class InLaTeXbot():
         self._updater = updater
         self._latexConverter = LatexConverter()
         self._preambleManager = PreambleManager()
+        self._resourceManager = ResourceManager()
         self._devnullChatId = devnullChatId
 
         self._updater.dispatcher.add_handler(CommandHandler('start', self.onStart))
@@ -44,18 +46,18 @@ class InLaTeXbot():
         self._updater.stop()
     
     def onStart(self, bot, update):
-        update.message.reply_text("Hi there! I'm an inline LaTeX bot, and I can help you to send cool pictures with LaTeX to any chat. Just call me from there and give me the code, like this:")
+        update.message.reply_text(self._resourceManager.getString("greeting_line_one"))
         with open("resources/demo.png", "rb") as f: 
             self._updater.bot.sendPhoto(update.message.from_user.id, f)
-        update.message.reply_text("You can also type /help here to see list of available customization commands.")
+        update.message.reply_text(self._resourceManager.getString("greeting_line_two"))
 
     def onAbort(self, bot, update):
         if self._messageHandler is None:
-            update.message.reply_text("Nothing to abort!")
+            update.message.reply_text(self._resourceManager.getString("nothing_to_abort"))
         else:
             self._updater.dispatcher.remove_handler(self._messageHandler, 1)
             self._messageHandler = None
-            update.message.reply_text("Operation aborted!")
+            update.message.reply_text(self._resourceManager.getString("operation_aborted"))
     
     def onHelp(self, bot, update):
         with open("resources/available_commands.html", "r") as f:
@@ -64,30 +66,30 @@ class InLaTeXbot():
     def onGetMyPreamble(self, bot, update):
         try:
             preamble = self._preambleManager.getPreambleFromDatabase(update.message.from_user.id)
-            update.message.reply_text("Here is your custom preamble:\n"+preamble)
+            update.message.reply_text(self._resourceManager.getString("your_preamble_custom")+preamble)
         except KeyError:
             preamble = self._preambleManager.getPreambleFromDatabase("default")
-            update.message.reply_text("Your have the default preamble:\n"+preamble)
+            update.message.reply_text(self._resourceManager.getString("your_preamble_default")+preamble)
             
     def onGetDefaultPreamble(self, bot, update):
         preamble = self._preambleManager.getPreambleFromDatabase("default")
-        update.message.reply_text("Here is the default preamble:\n"+preamble)
+        update.message.reply_text(self._resourceManager.getString("default_preamble")+preamble)
     
     def onRegisterCustomPreamble(self, bot, update):
         self._messageHandler = MessageHandler(Filters.text, self.onPreambleArrived)
         self._updater.dispatcher.add_handler(self._messageHandler, 1)
-        update.message.reply_text("Great, then let's register a custom preamble for you. Just message me the code, and I'll deal with everything else.")
+        update.message.reply_text(self._resourceManager.getString("register_preamble"))
     
     def onPreambleArrived(self, bot, update):
         preamble = update.message.text
-        update.message.reply_text("Cool. Let me check it...")
+        update.message.reply_text(self._resourceManager.getString("checking_preamble"))
         if self._preambleManager.validatePreamble(preamble):
             self._preambleManager.putPreambleToDatabase(update.message.from_user.id, preamble)
-            update.message.reply_text("Congratulations, your preamble is valid and now will be used for your queries.")
+            update.message.reply_text(self._resourceManager.getString("preamble_registered"))
             self._updater.dispatcher.remove_handler(self._messageHandler, 1)
             self._messageHandler = None
         else:
-            update.message.reply_text("Tough luck, it doesn't compile! Check your code!")
+            update.message.reply_text(self._resourceManager.getString("preamble_invalid"))
         
     def onInlineQuery(self, bot, update):
         query = update.inline_query.query
@@ -113,11 +115,11 @@ class InLaTeXbot():
             bot.answerInlineQuery(query_id, [InlineQueryResultCachedPhoto(id=0, photo_file_id=latex_picture_id)], cache_time=0)
         except ValueError:
             self._logger.debug("Wrong syntax in the query!")
-            bot.answerInlineQuery(query_id, [InlineQueryResultArticle(id=0, title='Syntax error!', 
+            bot.answerInlineQuery(query_id, [InlineQueryResultArticle(id=0, title=self._resourceManager.getString("latex_syntax_error"), 
                                                                             input_message_content=InputTextMessageContent(query))], cache_time=0)
         except TelegramError as err:
             self._logger.error(err)
-            bot.answerInlineQuery(query_id, [InlineQueryResultArticle(id=0, title='Telegram error: '+str(err), 
+            bot.answerInlineQuery(query_id, [InlineQueryResultArticle(id=0, title=self._resourceManager.getString("telegram_error")+str(err), 
                                                                             input_message_content=InputTextMessageContent(query))], cache_time=0)
         finally:
             self._logger.debug("Releasing lock for %d", senderId)
