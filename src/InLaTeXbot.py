@@ -2,15 +2,15 @@ from telegram.ext import Updater, CommandHandler, InlineQueryHandler, MessageHan
 from telegram import InlineQueryResultArticle, InputTextMessageContent, InlineQueryResultCachedPhoto, InlineQueryResult, TelegramError
 from src.LatexConverter import LatexConverter
 from src.PreambleManager import PreambleManager
-
+import logging 
+from logging.handlers import TimedRotatingFileHandler
+from multiprocessing import Process, Lock
 
 class InLaTeXbot():
     
-    expressionPngFile = "expression.png"
-    
-    def __init__(self, token="", devnullChatId=-1):
-        self._token = token
-        self._updater = Updater(token)
+    def __init__(self, updater, devnullChatId=-1):
+
+        self._updater = updater
         self._latexConverter = LatexConverter()
         self._preambleManager = PreambleManager()
         self._devnullChatId = devnullChatId
@@ -27,13 +27,22 @@ class InLaTeXbot():
         self._updater.dispatcher.add_handler(inline_caps_handler)
         
         self._messageHandler = None
+        
+        self._logger = logging.getLogger('inlatexbot')
+        self._logger.setLevel("DEBUG")
+        loggingHandler = TimedRotatingFileHandler('log/inlatexbot.log', when="midnight", backupCount=1)
+        loggingHandler.setFormatter(logging.Formatter(fmt='%(asctime)s.%(msecs)03d %(message)s', datefmt='%I:%M:%S'))
+        self._logger.addHandler(loggingHandler)
+        
+        self._locks = {}
+        
     
     def launch(self):
         self._updater.start_polling()
         
     def stop(self):
         self._updater.stop()
-         
+    
     def onStart(self, bot, update):
         update.message.reply_text("Hi there! I'm an inline LaTeX bot, and I can help you to send cool pictures with LaTeX to any chat. Just call me from there and give me the code, like this:")
         with open("resources/demo.png", "rb") as f: 
@@ -85,29 +94,34 @@ class InLaTeXbot():
         senderId = update.inline_query.from_user.id
         if not query:
             return
-        print("\rReceived query: "+query, end="")
+        self._logger.debug("Received inline query: "+query+", from user: "+str(senderId))
         
-        results = []
-        
+        lock = None
         try:
-            self._latexConverter.setPreambleId(senderId)
-            self._latexConverter.convertExpressionToPng(query)
-            with open(self.expressionPngFile, "rb") as f:
-                latex_picture_id = self._updater.bot.sendPhoto(self._devnullChatId, f).photo[0].file_id
-            print("... image successfully uploaded, id: "+latex_picture_id, end="")
-            
-            results.append(InlineQueryResultCachedPhoto(id=0, photo_file_id=latex_picture_id))
-            bot.answerInlineQuery(update.inline_query.id, results, cache_time=1)
-
+            lock = self._locks[senderId]
+        except KeyError:
+            lock = self._locks[senderId] = Lock()
+        Process(target = self.respondToInlineQueryTask, args=(bot, update.inline_query.id, query, senderId, lock)).start()
+        
+    def respondToInlineQueryTask(self, bot, query_id, query, senderId, lock):
+        lock.acquire()
+        self._logger.debug("Acquired lock for %d, query_id: %s", senderId, query_id)
+        try:
+            expressionPngFileStream = self._latexConverter.convertExpressionToPng(query, senderId)
+            latex_picture_id = bot.sendPhoto(self._devnullChatId, expressionPngFileStream).photo[0].file_id
+            self._logger.debug("Image successfully uploaded, id: "+latex_picture_id)
+            bot.answerInlineQuery(query_id, [InlineQueryResultCachedPhoto(id=0, photo_file_id=latex_picture_id)], cache_time=0)
         except ValueError:
-            print("... wrong syntax in the query!", end="")
-            results.append(InlineQueryResultArticle(id=0, title='Syntax error!', input_message_content=InputTextMessageContent(query)))
-            bot.answerInlineQuery(update.inline_query.id, results)
-            
+            self._logger.debug("Wrong syntax in the query!")
+            bot.answerInlineQuery(query_id, [InlineQueryResultArticle(id=0, title='Syntax error!', 
+                                                                            input_message_content=InputTextMessageContent(query))], cache_time=0)
         except TelegramError as err:
-            print(err)
-            results.append(InlineQueryResultArticle(id=0, title='Telegram error: '+str(err), input_message_content=InputTextMessageContent(query)))
-            bot.answerInlineQuery(update.inline_query.id, results)
+            self._logger.error(err)
+            bot.answerInlineQuery(query_id, [InlineQueryResultArticle(id=0, title='Telegram error: '+str(err), 
+                                                                            input_message_content=InputTextMessageContent(query))], cache_time=0)
+        finally:
+            self._logger.debug("Releasing lock for %d", senderId)
+            lock.release()
             
 if __name__ == '__main__':
     bot = InLaTeXbot()

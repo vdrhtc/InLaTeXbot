@@ -1,5 +1,6 @@
 from subprocess import check_output, CalledProcessError, STDOUT
 from src.PreambleManager import PreambleManager
+import io
 
 class LatexConverter():
 
@@ -35,30 +36,37 @@ class LatexConverter():
             width = height/maxHeightToWidth
         return width, height, translation_x, translation_y
 
-    def  convertExpressionToPng(self, expression):
+    def  convertExpressionToPng(self, expression, userId):
         
         preamble=""
         try:
-            preamble=self._preambleManager.getPreambleFromDatabase(self._preambleId)
+            preamble=self._preambleManager.getPreambleFromDatabase(userId)
         except KeyError:
             preamble=self._preambleManager.getPreambleFromDatabase("default")
             
         templateString = preamble+"\n\\begin{document}%s\\end{document}"
             
-        with open("resources/expression_file.tex", "w+") as f:
+        with open("build/expression_file_%d.tex"%userId, "w+") as f:
             f.write(templateString%expression)
             
         try:
-            check_output(['pdflatex', "-interaction=nonstopmode", "-output-directory", "build", "resources/expression_file.tex"], stderr=STDOUT).decode("ascii")
+            check_output(['pdflatex', "-interaction=nonstopmode", "-output-directory", "build", "build/expression_file_%d.tex"%userId], stderr=STDOUT).decode("ascii")
         except CalledProcessError as inst:
             raise ValueError("Wrong LaTeX syntax in the query")
             
-        bbox = self.extractBoundingBox("build/expression_file.pdf")
+        bbox = self.extractBoundingBox("build/expression_file_%d.pdf"%userId)
         bbox = self.correctBoundingBoxAspectRaito(bbox)
         
-        command = 'gs  -o expression.png -r%d -sDEVICE=pngalpha  -g%dx%d  -dLastPage=1 \
-                -c "<</Install {%d %d translate}>> setpagedevice" -f build/expression_file.pdf'\
-                %((self._pngResolution,)+bbox)
+        command = 'gs  -o resources/expression_%d.png -r%d -sDEVICE=pngalpha  -g%dx%d  -dLastPage=1 \
+                -c "<</Install {%d %d translate}>> setpagedevice" -f build/expression_file_%d.pdf'\
+                %((userId, self._pngResolution)+bbox+(userId,))
             
-        check_output(command, stderr=STDOUT, shell=True).decode("ascii")
-    
+        check_output(command, stderr=STDOUT, shell=True)
+        with open("resources/expression_%d.png"%userId, "rb") as f:
+            binaryDataStream = io.BytesIO(f.read())
+            
+        check_output(["rm build/*_%d.*"%userId], stderr=STDOUT, shell=True)
+        check_output(["rm resources/*_%d.png"%userId], stderr=STDOUT, shell=True)
+        
+        return binaryDataStream
+        

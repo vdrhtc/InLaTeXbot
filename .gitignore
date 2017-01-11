@@ -2,4 +2,4 @@
 build/*
 *checkpoints
 *.ipynb
-
+log/*
