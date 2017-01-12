@@ -1,0 +1,17 @@
+{
+    "greeting_line_one":"Hi there! I'm an inline LaTeX bot, and I can help you to send cool pictures with LaTeX to any chat. Just call me from there and give me the code, like this:",
+    "greeting_line_two":"You can also type /help here to see list of available customization commands.",
+    "nothing_to_abort":"Nothing to abort!",
+    "operation_aborted":"Operation aborted!",
+    "your_preamble_custom":"Here is your custom preamble:\n",
+    "your_preamble_default":"Your have the default preamble:\n",
+    "default_preamble":"Here is the default preamble:\n",
+    "register_preamble":"Great. Let's register a custom preamble for you. Just message me the code, and I'll deal with everything else.",
+    "checking_preamble":"Cool. Let me check it...",
+    "preamble_registered":"Congratulations, your preamble is valid and now will be used for your queries.",
+    "preamble_invalid":"Tough luck, it doesn't compile! Check your code!",
+    "latex_syntax_error":"Syntax error!",
+    "telegram_error":"Telegram error: "
+}
+
+
