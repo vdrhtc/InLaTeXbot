@@ -1,10 +1,12 @@
 import unittest
 from src.LatexConverter import LatexConverter
+from src.PreambleManager import PreambleManager
+from src.ResourceManager import ResourceManager
 
 class LatexConverterTest(unittest.TestCase):
 
     def setUp(self):
-        self.sut = LatexConverter()
+        self.sut = LatexConverter(PreambleManager(ResourceManager()))
 
     def testExtractBoundingBox(self):
         pass

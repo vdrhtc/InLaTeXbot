@@ -4,10 +4,10 @@ import io
 
 class LatexConverter():
 
-    def __init__(self, preambleId = "default", pngResolution=720):
+    def __init__(self, preambleManager, preambleId = "default", pngResolution=720):
          self._preambleId = preambleId
          self._pngResolution = pngResolution
-         self._preambleManager = PreambleManager()
+         self._preambleManager = preambleManager
          
     def setPreambleId(self, preambleId):
         self._preambleId = preambleId

@@ -10,6 +10,7 @@
     "checking_preamble":"Cool. Let me check it...",
     "preamble_registered":"Congratulations, your preamble is valid and now will be used for your queries.",
     "preamble_invalid":"Tough luck, it doesn't compile! Check your code!",
+    "preamble_too_long":"Sorry, I can only accept preambles not longer than %d characters",
     "latex_syntax_error":"Syntax error!",
     "telegram_error":"Telegram error: "
 }
