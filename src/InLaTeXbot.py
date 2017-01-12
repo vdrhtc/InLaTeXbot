@@ -20,9 +20,9 @@ class InLaTeXbot():
         self._updater.dispatcher.add_handler(CommandHandler('start', self.onStart))
         self._updater.dispatcher.add_handler(CommandHandler('abort', self.onAbort))
         self._updater.dispatcher.add_handler(CommandHandler("help", self.onHelp))
-        self._updater.dispatcher.add_handler(CommandHandler('registerCustomPreamble', self.onRegisterCustomPreamble))
-        self._updater.dispatcher.add_handler(CommandHandler('getMyPreamble', self.onGetMyPreamble))
-        self._updater.dispatcher.add_handler(CommandHandler('getDefaultPreamble', self.onGetDefaultPreamble))
+        self._updater.dispatcher.add_handler(CommandHandler('registercustompreamble', self.onRegisterCustomPreamble))
+        self._updater.dispatcher.add_handler(CommandHandler('getmypreamble', self.onGetMyPreamble))
+        self._updater.dispatcher.add_handler(CommandHandler('getdefaultpreamble', self.onGetDefaultPreamble))
         
 
         inline_caps_handler = InlineQueryHandler(self.onInlineQuery)
