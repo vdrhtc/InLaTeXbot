@@ -27,7 +27,7 @@ class PreambleManager():
         with open("/tmp/validate_preamble.tex", "w+") as f:
             f.write(document)
         try:
-            check_output(['pdflatex', "-interaction=nonstopmode","-draftmode", "/tmp/validate_preamble.tex"], stderr=STDOUT)
+            check_output(['pdflatex', "-interaction=nonstopmode","-draftmode", "-output-directory", "/tmp", "/tmp/validate_preamble.tex"], stderr=STDOUT)
             return True, ""
         except CalledProcessError as inst:
             return False, self._resourceManager.getString("preamble_invalid")
