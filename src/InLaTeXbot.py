@@ -116,15 +116,16 @@ class InLaTeXbot():
             expressionPngFileStream = self._latexConverter.convertExpressionToPng(query, senderId)
             latex_picture_id = bot.sendPhoto(self._devnullChatId, expressionPngFileStream).photo[0].file_id
             self._logger.debug("Image successfully uploaded, id: "+latex_picture_id)
-            bot.answerInlineQuery(queryId, [InlineQueryResultCachedPhoto(id=0, photo_file_id=latex_picture_id)], cache_time=0)
+            result = InlineQueryResultCachedPhoto(0, photo_file_id=latex_picture_id)
+            bot.answerInlineQuery(queryId, [result], cache_time=0)
         except ValueError:
             self._logger.debug("Wrong syntax in the query!")
-            bot.answerInlineQuery(queryId, [InlineQueryResultArticle(id=0, title=self._resourceManager.getString("latex_syntax_error"), 
-                                                                            input_message_content=InputTextMessageContent(query))], cache_time=0)
+            result = InlineQueryResultArticle(i0, self._resourceManager.getString("latex_syntax_error"), InputTextMessageContent(query))
+            bot.answerInlineQuery(queryId, [result], cache_time=0)
         except TelegramError as err:
             self._logger.error(err)
-            bot.answerInlineQuery(queryId, [InlineQueryResultArticle(id=0, title=self._resourceManager.getString("telegram_error")+str(err), 
-                                                                            input_message_content=InputTextMessageContent(query))], cache_time=0)
+            result = InlineQueryResultArticle(0, self._resourceManager.getString("telegram_error")+str(err), InputTextMessageContent(query))
+            bot.answerInlineQuery(queryId, [result], cache_time=0)
         finally:
             self._logger.debug("Releasing lock for %d", senderId)
             lock.release()

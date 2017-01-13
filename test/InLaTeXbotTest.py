@@ -9,12 +9,6 @@ class InLaTeXbotTest(unittest.TestCase):
         self.sut = InLaTeXbot(MagicMock())
         self.sut._preambleManager.putPreambleToDatabase = Mock()
         
-#    def testLaunch(self):
-#        self.sut.launch()
-#    
-#    def testStop(self):
-#        self.sut.stop()
-
     def testOnPreambleArrived(self):
 
         bot = MagicMock()
