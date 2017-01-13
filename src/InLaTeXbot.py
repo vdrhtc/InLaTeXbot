@@ -23,10 +23,9 @@ class InLaTeXbot():
         self._updater.dispatcher.add_handler(CommandHandler('setcustompreamble', self.onSetCustomPreamble))
         self._updater.dispatcher.add_handler(CommandHandler('getmypreamble', self.onGetMyPreamble))
         self._updater.dispatcher.add_handler(CommandHandler('getdefaultpreamble', self.onGetDefaultPreamble))
-        
 
-        inline_caps_handler = InlineQueryHandler(self.onInlineQuery)
-        self._updater.dispatcher.add_handler(inline_caps_handler)
+        inline_handler = InlineQueryHandler(self.onInlineQuery)
+        self._updater.dispatcher.add_handler(inline_handler)
         
         self._messageHandler = None
         
