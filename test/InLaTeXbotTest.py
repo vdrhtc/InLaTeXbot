@@ -32,16 +32,12 @@ class InLaTeXbotTest(unittest.TestCase):
         update.inline_query.query = "$x^2$"
         update.inline_query.from_user.id = 1151
         update.inline_query.id = "id"
-        #For single user (consequent)
-        self.sut.onInlineQuery(bot, update)
         self.sut.onInlineQuery(bot, update)
         
-        #For different users(concurrent)
-        self.sut.onInlineQuery(bot, update)
         update = MagicMock()
         update.inline_query.query = "$x^3$"
         update.inline_query.from_user.id = 1152
-        update.inline_query.id = "id"
+        update.inline_query.id = "id2"
         self.sut.onInlineQuery(bot, update)
     
     def testRespondToInlineQuery(self):
@@ -56,8 +52,7 @@ class InLaTeXbotTest(unittest.TestCase):
         inline_query.query = "$x^2$"
         inline_query.from_user.id = 1153
         inline_query.id = "id"
-        self.sut.respondToInlineQuery(inline_query, Mock())
-        expressionPngFileStream = self.sut._latexConverter.convertExpressionToPng(inline_query.query, 1153)
+        self.sut.respondToInlineQuery(inline_query)
         bot.sendPhoto.assert_called()
                 
 if __name__ == '__main__':

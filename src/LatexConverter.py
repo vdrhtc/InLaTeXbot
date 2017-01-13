@@ -46,27 +46,27 @@ class LatexConverter():
             
         templateString = preamble+"\n\\begin{document}%s\\end{document}"
             
-        with open("build/expression_file_%d.tex"%userId, "w+") as f:
+        with open("build/expression_file_%s.tex"%userId, "w+") as f:
             f.write(templateString%expression)
             
         try:
-            check_output(['pdflatex', "-interaction=nonstopmode", "-output-directory", "build", "build/expression_file_%d.tex"%userId], stderr=STDOUT).decode("ascii")
+            check_output(['pdflatex', "-interaction=nonstopmode", "-output-directory", "build", "build/expression_file_%s.tex"%userId], stderr=STDOUT).decode("ascii")
         except CalledProcessError as inst:
             raise ValueError("Wrong LaTeX syntax in the query")
             
-        bbox = self.extractBoundingBox("build/expression_file_%d.pdf"%userId)
+        bbox = self.extractBoundingBox("build/expression_file_%s.pdf"%userId)
         bbox = self.correctBoundingBoxAspectRaito(bbox)
         
-        command = 'gs  -o resources/expression_%d.png -r%d -sDEVICE=pngalpha  -g%dx%d  -dLastPage=1 \
-                -c "<</Install {%d %d translate}>> setpagedevice" -f build/expression_file_%d.pdf'\
+        command = 'gs  -o resources/expression_%s.png -r%d -sDEVICE=pngalpha  -g%dx%d  -dLastPage=1 \
+                -c "<</Install {%d %d translate}>> setpagedevice" -f build/expression_file_%s.pdf'\
                 %((userId, self._pngResolution)+bbox+(userId,))
             
         check_output(command, stderr=STDOUT, shell=True)
-        with open("resources/expression_%d.png"%userId, "rb") as f:
+        with open("resources/expression_%s.png"%userId, "rb") as f:
             binaryDataStream = io.BytesIO(f.read())
             
-        check_output(["rm build/*_%d.*"%userId], stderr=STDOUT, shell=True)
-        check_output(["rm resources/*_%d.png"%userId], stderr=STDOUT, shell=True)
+        check_output(["rm build/*_%s.*"%userId], stderr=STDOUT, shell=True)
+        check_output(["rm resources/*_%s.png"%userId], stderr=STDOUT, shell=True)
         
         return binaryDataStream
         

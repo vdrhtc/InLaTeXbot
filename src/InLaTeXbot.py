@@ -46,8 +46,6 @@ class InLaTeXbot():
         
         self._userResponseHandler = None
         
-        self._locks = {}
-    
     def launch(self):
         self._updater.start_polling()
         
@@ -105,45 +103,35 @@ class InLaTeXbot():
         if not update.inline_query.query:
             return
         self.logger.debug("Received inline query: "+update.inline_query.query+\
-                                ", from user: "+str(update.inline_query.from_user.id))
-        lock = None
-        try:
-            lock = self._locks[update.inline_query.from_user.id]
-        except KeyError:
-            lock = self._locks[update.inline_query.from_user.id] = Lock()
-        responder = Process(target = self.respondToInlineQuery, args=(update.inline_query, lock))
+                                ", id: "+str(update.inline_query.id)+", from user: "+str(update.inline_query.from_user.id))
+
+        responder = Process(target = self.respondToInlineQuery, args=[update.inline_query])
         responder.start()
         Thread(target=self.joinProcess, args=[responder]).start()
         
-    def respondToInlineQuery(self, inline_query, lock):
+    def respondToInlineQuery(self, inline_query):
         bot = self._updater.bot
         senderId = inline_query.from_user.id
         queryId = inline_query.id
         query = inline_query.query
-        
-        self.logger.debug("Acquiring lock for %d, queryId: %s", senderId, queryId)
-        lock.acquire()
-        self.logger.debug("Acquired lock for %d, queryId: %s", senderId, queryId)
-        
+
+        result = None
         try:
-            expressionPngFileStream = self._latexConverter.convertExpressionToPng(query, senderId)
+            expressionPngFileStream = self._latexConverter.convertExpressionToPng(query, str(queryId)+str(senderId))
             latex_picture_id = bot.sendPhoto(self._devnullChatId, expressionPngFileStream).photo[0].file_id
             self.logger.debug("Image successfully uploaded, id: "+latex_picture_id)
             result = InlineQueryResultCachedPhoto(0, photo_file_id=latex_picture_id)
-            bot.answerInlineQuery(queryId, [result], cache_time=0)
         except ValueError:
             self.logger.debug("Wrong syntax in the query")
             errorMessage= self._resourceManager.getString("latex_syntax_error")
             result = InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(query))
-            bot.answerInlineQuery(queryId, [result], cache_time=0)
         except TelegramError as err:
             self.logger.error(err)
             errorMessage = self._resourceManager.getString("telegram_error")+str(err)
             result = InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(query))
-            bot.answerInlineQuery(queryId, [result], cache_time=0)
         finally:
-            lock.release()
-            self.logger.debug("Released lock for %d", senderId)
+            bot.answerInlineQuery(queryId, [result], cache_time=0)
+            self.logger.debug("Answered to inline query %d, queryId: %s", senderId, queryId)
             
     def joinProcess(self, process):
         process.join()
