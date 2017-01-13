@@ -3,6 +3,7 @@ from logging import Formatter
 from logging.handlers import TimedRotatingFileHandler
 
 from multiprocessing import Process, Lock
+from threading import Thread
 
 from telegram import InlineQueryResultArticle, InputTextMessageContent, \
     InlineQueryResultCachedPhoto, InlineQueryResult, TelegramError
@@ -110,7 +111,9 @@ class InLaTeXbot():
             lock = self._locks[update.inline_query.from_user.id]
         except KeyError:
             lock = self._locks[update.inline_query.from_user.id] = Lock()
-        Process(target = self.respondToInlineQuery, args=(update.inline_query, lock)).start()
+        responder = Process(target = self.respondToInlineQuery, args=(update.inline_query, lock))
+        responder.start()
+        Thread(target=self.joinProcess, args=[responder]).start()
         
     def respondToInlineQuery(self, inline_query, lock):
         bot = self._updater.bot
@@ -139,8 +142,12 @@ class InLaTeXbot():
             result = InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(query))
             bot.answerInlineQuery(queryId, [result], cache_time=0)
         finally:
-            self.logger.debug("Releasing lock for %d", senderId)
             lock.release()
+            self.logger.debug("Released lock for %d", senderId)
+            
+    def joinProcess(self, process):
+        process.join()
+
             
 if __name__ == '__main__':
     bot = InLaTeXbot()
