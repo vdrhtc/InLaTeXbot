@@ -1,13 +1,19 @@
+import logging 
 from telegram.ext import Updater, CommandHandler, InlineQueryHandler, MessageHandler, Filters
 from telegram import InlineQueryResultArticle, InputTextMessageContent, InlineQueryResultCachedPhoto, InlineQueryResult, TelegramError
 from src.LatexConverter import LatexConverter
 from src.PreambleManager import PreambleManager
 from src.ResourceManager import ResourceManager
-import logging 
 from logging.handlers import TimedRotatingFileHandler
 from multiprocessing import Process, Lock
 
 class InLaTeXbot():
+    
+    _logger = logging.getLogger('inlatexbot')
+    _logger.setLevel("DEBUG")
+    loggingHandler = TimedRotatingFileHandler('log/inlatexbot.log', when="midnight", backupCount=1)
+    loggingHandler.setFormatter(logging.Formatter(fmt='%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s', datefmt='%I:%M:%S'))
+    _logger.addHandler(loggingHandler)
     
     def __init__(self, updater, devnullChatId=-1):
 
@@ -27,16 +33,10 @@ class InLaTeXbot():
         inline_handler = InlineQueryHandler(self.onInlineQuery)
         self._updater.dispatcher.add_handler(inline_handler)
         
-        self._messageHandler = None
-        
-        self._logger = logging.getLogger('inlatexbot')
-        self._logger.setLevel("DEBUG")
-        loggingHandler = TimedRotatingFileHandler('log/inlatexbot.log', when="midnight", backupCount=1)
-        loggingHandler.setFormatter(logging.Formatter(fmt='%(asctime)s.%(msecs)03d %(message)s', datefmt='%I:%M:%S'))
-        self._logger.addHandler(loggingHandler)
+        self._userResponseHandler = None
+        self._passthroughHandler = MessageHandler(Filters.text, self.onAnyMessage)
         
         self._locks = {}
-        
     
     def launch(self):
         self._updater.start_polling()
@@ -46,22 +46,26 @@ class InLaTeXbot():
     
     def onStart(self, bot, update):
         update.message.reply_text(self._resourceManager.getString("greeting_line_one"))
-        with open("resources/demo.png", "rb") as f: 
+        with open("resources/demo.png", "rb") as f:
             self._updater.bot.sendPhoto(update.message.from_user.id, f)
         update.message.reply_text(self._resourceManager.getString("greeting_line_two"))
 
     def onAbort(self, bot, update):
-        if self._messageHandler is None:
+        if self._userResponseHandler is None:
             update.message.reply_text(self._resourceManager.getString("nothing_to_abort"))
         else:
-            self._updater.dispatcher.remove_handler(self._messageHandler, 1)
-            self._messageHandler = None
+            self._updater.dispatcher.remove_handler(self._userResponseHandler, 1)
+            self._userResponseHandler = None
             update.message.reply_text(self._resourceManager.getString("operation_aborted"))
     
     def onHelp(self, bot, update):
         with open("resources/available_commands.html", "r") as f:
             update.message.reply_text(f.read(), parse_mode="HTML")
-    
+            
+    def onAnyMessage(self, bot, update):
+        self._logger.debug("Update arrived: "+str(update))
+        self._updater.update_queue.put(update)
+        
     def onGetMyPreamble(self, bot, update):
         try:
             preamble = self._preambleManager.getPreambleFromDatabase(update.message.from_user.id)
@@ -75,8 +79,8 @@ class InLaTeXbot():
         update.message.reply_text(self._resourceManager.getString("default_preamble")+preamble)
     
     def onSetCustomPreamble(self, bot, update):
-        self._messageHandler = MessageHandler(Filters.text, self.onPreambleArrived)
-        self._updater.dispatcher.add_handler(self._messageHandler, 1)
+        self._userResponseHandler = MessageHandler(Filters.text, self.onPreambleArrived)
+        self._updater.dispatcher.add_handler(self._userResponseHandler, 1)
         update.message.reply_text(self._resourceManager.getString("register_preamble"))
     
     def onPreambleArrived(self, bot, update):
@@ -86,8 +90,8 @@ class InLaTeXbot():
         if valid:
             self._preambleManager.putPreambleToDatabase(update.message.from_user.id, preamble)
             update.message.reply_text(self._resourceManager.getString("preamble_registered"))
-            self._updater.dispatcher.remove_handler(self._messageHandler, 1)
-            self._messageHandler = None
+            self._updater.dispatcher.remove_handler(self._userResponseHandler, 1)
+            self._userResponseHandler = None
         else:
             update.message.reply_text(preamble_error_message)
         
@@ -119,12 +123,14 @@ class InLaTeXbot():
             result = InlineQueryResultCachedPhoto(0, photo_file_id=latex_picture_id)
             bot.answerInlineQuery(queryId, [result], cache_time=0)
         except ValueError:
-            self._logger.debug("Wrong syntax in the query!")
-            result = InlineQueryResultArticle(i0, self._resourceManager.getString("latex_syntax_error"), InputTextMessageContent(query))
+            self._logger.debug("Wrong syntax in the query")
+            errorMessage= self._resourceManager.getString("latex_syntax_error")
+            result = InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(query))
             bot.answerInlineQuery(queryId, [result], cache_time=0)
         except TelegramError as err:
             self._logger.error(err)
-            result = InlineQueryResultArticle(0, self._resourceManager.getString("telegram_error")+str(err), InputTextMessageContent(query))
+            errorMessage = self._resourceManager.getString("telegram_error")+str(err)
+            result = InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(query))
             bot.answerInlineQuery(queryId, [result], cache_time=0)
         finally:
             self._logger.debug("Releasing lock for %d", senderId)
