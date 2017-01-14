@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage[a6paper]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{lastpage}
+\usepackage{amsmath}
+\usepackage{physics}
+\usepackage{lipsum}
+\pagenumbering{gobble}
+
