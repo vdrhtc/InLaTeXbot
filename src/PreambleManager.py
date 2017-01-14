@@ -6,6 +6,10 @@ class PreambleManager():
     
     def __init__(self, resourceManager):
         self._resourceManager = resourceManager
+        
+    def getDefaultPreamble(self):
+        with open("./resources/default_preamble.txt", "r") as f:
+            return f.read()
     
     def getPreambleFromDatabase(self, preambleId):
         with open("./resources/preambles.pkl", "rb") as f:

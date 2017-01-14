@@ -57,7 +57,7 @@ class LatexConverter():
             preamble=self._preambleManager.getPreambleFromDatabase(userId)
         except KeyError:
             self.logger.debug("Preamble for userId %d not found, using default preamble", userId)
-            preamble=self._preambleManager.getPreambleFromDatabase("default")
+            preamble=self._preambleManager.getDefaultPreamble()
             
         templateString = preamble+"\n\\begin{document}%s\\end{document}"
             

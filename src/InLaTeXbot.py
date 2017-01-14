@@ -75,11 +75,11 @@ class InLaTeXbot():
             preamble = self._preambleManager.getPreambleFromDatabase(update.message.from_user.id)
             update.message.reply_text(self._resourceManager.getString("your_preamble_custom")+preamble)
         except KeyError:
-            preamble = self._preambleManager.getPreambleFromDatabase("default")
+            preamble = self._preambleManager.getDefaultPreamble()
             update.message.reply_text(self._resourceManager.getString("your_preamble_default")+preamble)
             
     def onGetDefaultPreamble(self, bot, update):
-        preamble = self._preambleManager.getPreambleFromDatabase("default")
+        preamble = self._preambleManager.getDefaultPreamble()
         update.message.reply_text(self._resourceManager.getString("default_preamble")+preamble)
     
     def onSetCustomPreamble(self, bot, update):
