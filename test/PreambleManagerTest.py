@@ -10,8 +10,7 @@ class PreambleManagerTest(unittest.TestCase):
         self.sut = PreambleManager(self.resourceManager)
 
     def testValidatePreamble(self):
-        correct_preamble="\documentclass[12pt]{article}"
-        self.assertEqual(self.sut.validatePreamble(correct_preamble), (True, ""))
+        self.assertEqual(self.sut.validatePreamble(self.sut.getDefaultPreamble()), (True, ""))
 
         incorrect_preamble="\documentclass[12pt]{arti}"
         self.assertEqual(self.sut.validatePreamble(incorrect_preamble), (False, self.resourceManager.getString("preamble_invalid")))

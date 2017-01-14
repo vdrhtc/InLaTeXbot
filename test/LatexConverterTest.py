@@ -18,15 +18,16 @@ class LatexConverterTest(unittest.TestCase):
         binaryData = self.sut.convertExpressionToPng("$x^2$", 115, "id").read()
         with open('resources/test/xsquared.png', "rb") as f:
             correctBinaryData = f.read()
-        self.assertAlmostEqual(len(binaryData), len(correctBinaryData), delta=5)
+        self.assertAlmostEqual(len(binaryData), len(correctBinaryData), delta=50)
         
         binaryData = self.sut.convertExpressionToPng("$x^2$"*10, 115, "id").read()
         with open('resources/test/xsquared10times.png', "rb") as f:
             correctBinaryData = f.read()
-        self.assertAlmostEqual(len(binaryData), len(correctBinaryData), delta=5)
+        self.assertAlmostEqual(len(binaryData), len(correctBinaryData), delta=50)
         
         self.sut.setPreambleId("11")
         binaryData = self.sut.convertExpressionToPng("$x^2$"*10, 115, "id").read()
+        self.assertAlmostEqual(len(binaryData), len(correctBinaryData), delta=50)
         
 if __name__ == '__main__':
     unittest.main()
