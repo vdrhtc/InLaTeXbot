@@ -117,7 +117,7 @@ class InLaTeXbot():
 
         result = None
         try:
-            expressionPngFileStream = self._latexConverter.convertExpressionToPng(query, str(queryId)+str(senderId))
+            expressionPngFileStream = self._latexConverter.convertExpressionToPng(query, senderId, str(queryId)+str(senderId))
             latex_picture_id = bot.sendPhoto(self._devnullChatId, expressionPngFileStream).photo[0].file_id
             self.logger.debug("Image successfully uploaded, id: "+latex_picture_id)
             result = InlineQueryResultCachedPhoto(0, photo_file_id=latex_picture_id)

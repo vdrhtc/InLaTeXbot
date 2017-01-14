@@ -1,10 +1,24 @@
 from subprocess import check_output, CalledProcessError, STDOUT
+
+import logging
+from logging import Formatter
+from logging.handlers import TimedRotatingFileHandler
+
 from src.PreambleManager import PreambleManager
 import io
 
 class LatexConverter():
 
-    def __init__(self, preambleManager, preambleId = "default", pngResolution=720):
+    loggingHandler = TimedRotatingFileHandler(
+        'log/inlatexbot.log', when="midnight", backupCount=1)
+    loggingFormat = '%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s'
+    loggingFormatter = Formatter(fmt=loggingFormat, datefmt='%I:%M:%S')
+    loggingHandler.setFormatter(loggingFormatter)
+    logger = logging.getLogger('latexconverter')
+    logger.setLevel("DEBUG")
+    logger.addHandler(loggingHandler)
+    
+    def __init__(self, preambleManager, preambleId = "default", pngResolution=300):
          self._preambleId = preambleId
          self._pngResolution = pngResolution
          self._preambleManager = preambleManager
@@ -36,37 +50,38 @@ class LatexConverter():
             width = height/maxHeightToWidth
         return width, height, translation_x, translation_y
 
-    def  convertExpressionToPng(self, expression, userId):
+    def convertExpressionToPng(self, expression, userId, sessionId):
         
         preamble=""
         try:
             preamble=self._preambleManager.getPreambleFromDatabase(userId)
         except KeyError:
+            self.logger.debug("Preamble for userId %d not found, using default preamble", userId)
             preamble=self._preambleManager.getPreambleFromDatabase("default")
             
         templateString = preamble+"\n\\begin{document}%s\\end{document}"
             
-        with open("build/expression_file_%s.tex"%userId, "w+") as f:
+        with open("build/expression_file_%s.tex"%sessionId, "w+") as f:
             f.write(templateString%expression)
             
         try:
-            check_output(['pdflatex', "-interaction=nonstopmode", "-output-directory", "build", "build/expression_file_%s.tex"%userId], stderr=STDOUT).decode("ascii")
+            check_output(['pdflatex', "-interaction=nonstopmode", "-output-directory", "build", "build/expression_file_%s.tex"%sessionId], stderr=STDOUT).decode("ascii")
         except CalledProcessError as inst:
             raise ValueError("Wrong LaTeX syntax in the query")
             
-        bbox = self.extractBoundingBox("build/expression_file_%s.pdf"%userId)
+        bbox = self.extractBoundingBox("build/expression_file_%s.pdf"%sessionId)
         bbox = self.correctBoundingBoxAspectRaito(bbox)
         
         command = 'gs  -o resources/expression_%s.png -r%d -sDEVICE=pngalpha  -g%dx%d  -dLastPage=1 \
                 -c "<</Install {%d %d translate}>> setpagedevice" -f build/expression_file_%s.pdf'\
-                %((userId, self._pngResolution)+bbox+(userId,))
+                %((sessionId, self._pngResolution)+bbox+(sessionId,))
             
         check_output(command, stderr=STDOUT, shell=True)
-        with open("resources/expression_%s.png"%userId, "rb") as f:
+        with open("resources/expression_%s.png"%sessionId, "rb") as f:
             binaryDataStream = io.BytesIO(f.read())
             
-        check_output(["rm build/*_%s.*"%userId], stderr=STDOUT, shell=True)
-        check_output(["rm resources/*_%s.png"%userId], stderr=STDOUT, shell=True)
+        check_output(["rm build/*_%s.*"%sessionId], stderr=STDOUT, shell=True)
+        check_output(["rm resources/*_%s.png"%sessionId], stderr=STDOUT, shell=True)
         
         return binaryDataStream
         
