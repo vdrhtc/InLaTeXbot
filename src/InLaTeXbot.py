@@ -2,9 +2,6 @@ import logging
 from logging import Formatter
 from logging.handlers import TimedRotatingFileHandler
 
-from multiprocessing import Process, Lock
-from threading import Thread
-
 from telegram import InlineQueryResultArticle, InputTextMessageContent, \
     InlineQueryResultCachedPhoto, InlineQueryResult, TelegramError
 from telegram.ext import Updater, CommandHandler, InlineQueryHandler, \
@@ -13,6 +10,7 @@ from telegram.ext import Updater, CommandHandler, InlineQueryHandler, \
 from src.LatexConverter import LatexConverter
 from src.PreambleManager import PreambleManager
 from src.ResourceManager import ResourceManager
+from src.InlineQueryResponseDispatcher import InlineQueryResponseDispatcher
 
 
 class InLaTeXbot():
@@ -32,6 +30,7 @@ class InLaTeXbot():
         self._resourceManager = ResourceManager()
         self._preambleManager = PreambleManager(self._resourceManager)
         self._latexConverter = LatexConverter(self._preambleManager)
+        self._inlineQueryResponseDispatcher = InlineQueryResponseDispatcher(updater.bot, self._latexConverter, self._resourceManager, devnullChatId)
         self._devnullChatId = devnullChatId
 
         self._updater.dispatcher.add_handler(CommandHandler('start', self.onStart))
@@ -102,40 +101,7 @@ class InLaTeXbot():
     def onInlineQuery(self, bot, update):
         if not update.inline_query.query:
             return
-        self.logger.debug("Received inline query: "+update.inline_query.query+\
-                                ", id: "+str(update.inline_query.id)+", from user: "+str(update.inline_query.from_user.id))
-
-        responder = Process(target = self.respondToInlineQuery, args=[update.inline_query])
-        responder.start()
-        Thread(target=self.joinProcess, args=[responder]).start()
-        
-    def respondToInlineQuery(self, inline_query):
-        bot = self._updater.bot
-        senderId = inline_query.from_user.id
-        queryId = inline_query.id
-        query = inline_query.query
-
-        result = None
-        try:
-            expressionPngFileStream = self._latexConverter.convertExpressionToPng(query, senderId, str(queryId)+str(senderId))
-            latex_picture_id = bot.sendPhoto(self._devnullChatId, expressionPngFileStream).photo[0].file_id
-            self.logger.debug("Image successfully uploaded, id: "+latex_picture_id)
-            result = InlineQueryResultCachedPhoto(0, photo_file_id=latex_picture_id)
-        except ValueError:
-            self.logger.debug("Wrong syntax in the query")
-            errorMessage= self._resourceManager.getString("latex_syntax_error")
-            result = InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(query))
-        except TelegramError as err:
-            self.logger.error(err)
-            errorMessage = self._resourceManager.getString("telegram_error")+str(err)
-            result = InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(query))
-        finally:
-            bot.answerInlineQuery(queryId, [result], cache_time=0)
-            self.logger.debug("Answered to inline query %d, queryId: %s", senderId, queryId)
-            
-    def joinProcess(self, process):
-        process.join()
-
+        self._inlineQueryResponseDispatcher.dispatchInlineQueryResponse(update.inline_query)
             
 if __name__ == '__main__':
     bot = InLaTeXbot()

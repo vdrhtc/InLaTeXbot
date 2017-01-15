@@ -82,6 +82,6 @@ class LatexConverter():
             
         check_output(["rm build/*_%s.*"%sessionId], stderr=STDOUT, shell=True)
         check_output(["rm resources/*_%s.png"%sessionId], stderr=STDOUT, shell=True)
-        
+        self.logger.debug("Generated image for %s", expression)
         return binaryDataStream
         
