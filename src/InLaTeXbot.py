@@ -91,6 +91,7 @@ class InLaTeXbot():
         update.message.reply_text(self._resourceManager.getString("checking_preamble"))
         valid, preamble_error_message = self._preambleManager.validatePreamble(preamble)
         if valid:
+            self.logger.debug("Registering preamble for user %d", update.message.from_user.id)
             self._preambleManager.putPreambleToDatabase(update.message.from_user.id, preamble)
             update.message.reply_text(self._resourceManager.getString("preamble_registered"))
             self._updater.dispatcher.remove_handler(self._userResponseHandler, 1)
