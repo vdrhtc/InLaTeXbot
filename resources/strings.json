@@ -10,8 +10,9 @@
     "checking_preamble":"Cool. Let me check it...",
     "preamble_registered":"Congratulations, your preamble is valid and now will be used for your queries.",
     "preamble_invalid":"Tough luck, it doesn't compile! Check your code!",
-    "preamble_too_long":"Sorry, I can only accept preambles not longer than %d characters. Be clear, correct and concise!",
+    "preamble_too_long":"Sorry, I can only accept preambles not longer than %d characters. Remember the 3Cs rule!",
     "latex_syntax_error":"Syntax error!",
+    "inline_query_too_long":"Syntax error. Your query may be too long!",
     "telegram_error":"Telegram error: "
 }
 
