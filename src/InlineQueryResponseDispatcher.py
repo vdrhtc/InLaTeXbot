@@ -92,7 +92,7 @@ class InlineQueryResponseDispatcher():
                 return InlineQueryResultCachedPhoto(0, photo_file_id=latex_picture_id)
             except TelegramError as err:
                 errorMessage = self._resourceManager.getString("telegram_error")+str(err)
-                logger.warn(errorMessage)
+                self.logger.warn(errorMessage)
 
         return InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(expression))
         
