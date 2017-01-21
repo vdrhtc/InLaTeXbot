@@ -1,22 +1,12 @@
 from subprocess import check_output, CalledProcessError, STDOUT
 
-import logging
-from logging import Formatter
-from logging.handlers import TimedRotatingFileHandler
-
 from src.PreambleManager import PreambleManager
+from src.LoggingServer import LoggingServer
 import io
 
 class LatexConverter():
 
-    loggingHandler = TimedRotatingFileHandler(
-        'log/inlatexbot.log', when="midnight", backupCount=1)
-    loggingFormat = '%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s'
-    loggingFormatter = Formatter(fmt=loggingFormat, datefmt='%I:%M:%S')
-    loggingHandler.setFormatter(loggingFormatter)
-    logger = logging.getLogger('latexconverter')
-    logger.setLevel("DEBUG")
-    logger.addHandler(loggingHandler)
+    logger = LoggingServer.getInstance()
     
     def __init__(self, preambleManager, preambleId = "default", pngResolution=300):
          self._preambleId = preambleId

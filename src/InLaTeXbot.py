@@ -1,7 +1,3 @@
-import logging
-from logging import Formatter
-from logging.handlers import TimedRotatingFileHandler
-
 from telegram import InlineQueryResultArticle, InputTextMessageContent, \
     InlineQueryResultCachedPhoto, InlineQueryResult, TelegramError
 from telegram.ext import Updater, CommandHandler, InlineQueryHandler, \
@@ -11,18 +7,11 @@ from src.LatexConverter import LatexConverter
 from src.PreambleManager import PreambleManager
 from src.ResourceManager import ResourceManager
 from src.InlineQueryResponseDispatcher import InlineQueryResponseDispatcher
-
+from src.LoggingServer import LoggingServer
 
 class InLaTeXbot():
 
-    loggingHandler = TimedRotatingFileHandler(
-        'log/inlatexbot.log', when="midnight", backupCount=1)
-    loggingFormat = '%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s'
-    loggingFormatter = Formatter(fmt=loggingFormat, datefmt='%I:%M:%S')
-    loggingHandler.setFormatter(loggingFormatter)
-    logger = logging.getLogger('inlatexbot')
-    logger.setLevel("DEBUG")
-    logger.addHandler(loggingHandler)
+    logger = LoggingServer.getInstance()
 
     def __init__(self, updater, devnullChatId=-1):
 

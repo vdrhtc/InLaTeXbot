@@ -1,7 +1,3 @@
-import logging
-from logging import Formatter
-from logging.handlers import TimedRotatingFileHandler
-
 from multiprocessing import Process, Lock, Event
 from threading import Thread
 
@@ -10,18 +6,11 @@ from telegram import InlineQueryResultArticle, InputTextMessageContent, \
 from telegram.ext import Updater, CommandHandler, InlineQueryHandler, \
     MessageHandler, Filters
 
-
+from src.LoggingServer import LoggingServer
 
 class InlineQueryResponseDispatcher():
 
-    loggingHandler = TimedRotatingFileHandler(
-        'log/inlatexbot.log', when="midnight", backupCount=1)
-    loggingFormat = '%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s'
-    loggingFormatter = Formatter(fmt=loggingFormat, datefmt='%I:%M:%S')
-    loggingHandler.setFormatter(loggingFormatter)
-    logger = logging.getLogger('inlinequeryresponsedispatcher')
-    logger.setLevel("DEBUG")
-    logger.addHandler(loggingHandler)
+    logger = LoggingServer.getInstance()
     
     def __init__(self, bot, latexConverter, resourceManager, devnullChatId):
         self._bot = bot
@@ -96,7 +85,7 @@ class InlineQueryResponseDispatcher():
                 return InlineQueryResultCachedPhoto(0, photo_file_id=latex_picture_id)
             except TelegramError as err:
                 errorMessage = self._resourceManager.getString("telegram_error")+str(err)
-                logger.warn(errorMessage)
+                self.logger.warn(errorMessage)
 
         return InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(expression))
         
