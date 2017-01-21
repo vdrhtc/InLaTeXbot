@@ -66,7 +66,7 @@ class InlineQueryResponseDispatcher():
         return False
     
     def getWrongSyntaxResult(self, query):
-        if len(query)==256:
+        if len(query)>=250:
             self.logger.debug("Query may be too long")
             errorMessage= self._resourceManager.getString("inline_query_too_long")
         else:
