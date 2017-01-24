@@ -86,6 +86,7 @@ class InlineQueryResponseDispatcher():
             except TelegramError as err:
                 errorMessage = self._resourceManager.getString("telegram_error")+str(err)
                 self.logger.warn(errorMessage)
+                attempts += 1
 
         return InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(expression))
         
