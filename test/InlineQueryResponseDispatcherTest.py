@@ -5,13 +5,14 @@ from time import sleep
 
 from src.InlineQueryResponseDispatcher import InlineQueryResponseDispatcher
 from src.ResourceManager import ResourceManager
+from src.UserOptionsManager import UserOptionsManager
 
 class InlineQueryResponseDispatcherTest(unittest.TestCase):
 
     def setUp(self):
         self.latexConverter = Mock()
         self.bot = Mock()
-        self.sut = InlineQueryResponseDispatcher(self.bot, self.latexConverter, ResourceManager(),  -1)
+        self.sut = InlineQueryResponseDispatcher(self.bot, self.latexConverter, ResourceManager(), UserOptionsManager(), -1)
     
     def testRespondToInlineQuery(self):
         bot = Mock()

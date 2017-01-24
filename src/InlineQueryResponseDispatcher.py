@@ -12,10 +12,11 @@ class InlineQueryResponseDispatcher():
 
     logger = LoggingServer.getInstance()
     
-    def __init__(self, bot, latexConverter, resourceManager, devnullChatId):
+    def __init__(self, bot, latexConverter, resourceManager, userOptionsManager, devnullChatId):
         self._bot = bot
         self._latexConverter = latexConverter
         self._resourceManager = resourceManager
+        self._userOptionsManager = userOptionsManager
         self._devnullChatId = devnullChatId
         self._nextQueryArrivedEvents = {}
             
@@ -43,11 +44,13 @@ class InlineQueryResponseDispatcher():
         queryId = inline_query.id
         expression = inline_query.query
         
+        caption = self.generateCaption(senderId, expression)
+        
         result = None
         try:
             expressionPngFileStream = self._latexConverter.convertExpressionToPng(expression, senderId, str(queryId)+str(senderId))
             if not nextQueryArrivedEvent.is_set():
-                result = self.uploadImage(expressionPngFileStream, expression)
+                result = self.uploadImage(expressionPngFileStream, expression, caption)
         except ValueError:
             result = self.getWrongSyntaxResult(expression)
         except TelegramError as err:
@@ -74,7 +77,7 @@ class InlineQueryResponseDispatcher():
             errorMessage= self._resourceManager.getString("latex_syntax_error")
         return InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(query))
             
-    def uploadImage(self, image, expression):
+    def uploadImage(self, image, expression, caption):
         attempts = 0
         errorMessage = None
         
@@ -82,12 +85,18 @@ class InlineQueryResponseDispatcher():
             try:
                 latex_picture_id = self._bot.sendPhoto(self._devnullChatId, image).photo[0].file_id
                 self.logger.debug("Image successfully uploaded for %s", expression)
-                return InlineQueryResultCachedPhoto(0, photo_file_id=latex_picture_id)
+                return InlineQueryResultCachedPhoto(0, photo_file_id=latex_picture_id, caption = caption)
             except TelegramError as err:
                 errorMessage = self._resourceManager.getString("telegram_error")+str(err)
                 self.logger.warn(errorMessage)
                 attempts += 1
 
         return InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(expression))
-        
+    
+    def generateCaption(self, senderId, expression):
+        if self._userOptionsManager.getCodeInCaptionOption(senderId) is True:
+            return expression[:200]
+        else:
+            return ""
+    
         

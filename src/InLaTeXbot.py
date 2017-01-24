@@ -8,6 +8,7 @@ from src.PreambleManager import PreambleManager
 from src.ResourceManager import ResourceManager
 from src.InlineQueryResponseDispatcher import InlineQueryResponseDispatcher
 from src.LoggingServer import LoggingServer
+from src.UserOptionsManager import UserOptionsManager
 
 class InLaTeXbot():
 
@@ -17,9 +18,10 @@ class InLaTeXbot():
 
         self._updater = updater
         self._resourceManager = ResourceManager()
+        self._userOptionsManager = UserOptionsManager()
         self._preambleManager = PreambleManager(self._resourceManager)
         self._latexConverter = LatexConverter(self._preambleManager)
-        self._inlineQueryResponseDispatcher = InlineQueryResponseDispatcher(updater.bot, self._latexConverter, self._resourceManager, devnullChatId)
+        self._inlineQueryResponseDispatcher = InlineQueryResponseDispatcher(updater.bot, self._latexConverter, self._resourceManager, self._userOptionsManager, devnullChatId)
         self._devnullChatId = devnullChatId
 
         self._updater.dispatcher.add_handler(CommandHandler('start', self.onStart))
@@ -28,6 +30,9 @@ class InLaTeXbot():
         self._updater.dispatcher.add_handler(CommandHandler('setcustompreamble', self.onSetCustomPreamble))
         self._updater.dispatcher.add_handler(CommandHandler('getmypreamble', self.onGetMyPreamble))
         self._updater.dispatcher.add_handler(CommandHandler('getdefaultpreamble', self.onGetDefaultPreamble))
+        self._updater.dispatcher.add_handler(CommandHandler('setcodeincaptionon', self.onSetCodeInCaptionOn))
+        self._updater.dispatcher.add_handler(CommandHandler('setcodeincaptionoff', self.onSetCodeInCaptionOff))
+        
 
         inline_handler = InlineQueryHandler(self.onInlineQuery)
         self._updater.dispatcher.add_handler(inline_handler)
@@ -88,6 +93,14 @@ class InLaTeXbot():
         else:
             update.message.reply_text(preamble_error_message)
         
+    def onSetCodeInCaptionOn(self, bot, update):
+        userId  = update.message.from_user.id
+        self._userOptionsManager.setCodeInCaptionOption(userId, True)
+    
+    def onSetCodeInCaptionOff(self, bot, update):
+        userId  = update.message.from_user.id
+        self._userOptionsManager.setCodeInCaptionOption(userId, False)
+    
     def onInlineQuery(self, bot, update):
         if not update.inline_query.query:
             return

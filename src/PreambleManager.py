@@ -1,4 +1,5 @@
 from subprocess import check_output, CalledProcessError, STDOUT
+from multiprocessing import Lock
 import pickle as pkl
 from src.ResourceManager import ResourceManager
 
@@ -6,22 +7,25 @@ class PreambleManager():
     
     def __init__(self, resourceManager):
         self._resourceManager = resourceManager
+        self._lock = Lock()
         
     def getDefaultPreamble(self):
         with open("./resources/default_preamble.txt", "r") as f:
             return f.read()
     
     def getPreambleFromDatabase(self, preambleId):
-        with open("./resources/preambles.pkl", "rb") as f:
-            preambles = pkl.load(f)
-        return preambles[preambleId]
+        with self._lock:
+            with open("./resources/preambles.pkl", "rb") as f:
+                preambles = pkl.load(f)
+            return preambles[preambleId]
     
     def putPreambleToDatabase(self, preambleId, preamble):
-        with open("./resources/preambles.pkl", "rb") as f:
-            preambles = pkl.load(f)
-        preambles[preambleId] = preamble
-        with open("./resources/preambles.pkl", "wb") as f:
-            pkl.dump(preambles, f)
+        with self._lock:
+            with open("./resources/preambles.pkl", "rb") as f:
+                preambles = pkl.load(f)
+            preambles[preambleId] = preamble
+            with open("./resources/preambles.pkl", "wb") as f:
+                pkl.dump(preambles, f)
     
     def validatePreamble(self, preamble):
         if len(preamble) > self._resourceManager.getNumber("max_preamble_length"):
