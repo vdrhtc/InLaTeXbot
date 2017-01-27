@@ -32,12 +32,12 @@ class InLaTeXbot():
         self._updater.dispatcher.add_handler(CommandHandler('getdefaultpreamble', self.onGetDefaultPreamble))
         self._updater.dispatcher.add_handler(CommandHandler('setcodeincaptionon', self.onSetCodeInCaptionOn))
         self._updater.dispatcher.add_handler(CommandHandler('setcodeincaptionoff', self.onSetCodeInCaptionOff))
-        
+        self._updater.dispatcher.add_handler(MessageHandler(Filters.text, self.onPreambleArrived), 1)
 
         inline_handler = InlineQueryHandler(self.onInlineQuery)
         self._updater.dispatcher.add_handler(inline_handler)
         
-        self._userResponseHandler = None
+        self._usersRequestedCustomPreambleRegistration = []
         
     def launch(self):
         self._updater.start_polling()
@@ -52,13 +52,13 @@ class InLaTeXbot():
         update.message.reply_text(self._resourceManager.getString("greeting_line_two"))
 
     def onAbort(self, bot, update):
-        if self._userResponseHandler is None:
-            update.message.reply_text(self._resourceManager.getString("nothing_to_abort"))
-        else:
-            self._updater.dispatcher.remove_handler(self._userResponseHandler, 1)
-            self._userResponseHandler = None
-            update.message.reply_text(self._resourceManager.getString("operation_aborted"))
-    
+        senderId = update.message.from_user.id
+        try:
+            self._usersRequestedCustomPreambleRegistration.remove(senderId)
+            update.message.reply_text(self._resourceManager.getString("preamble_registration_aborted"))            
+        except ValueError:
+            update.message.reply_text(self._resourceManager.getString("nothing_to_abort"))            
+            
     def onHelp(self, bot, update):
         with open("resources/available_commands.html", "r") as f:
             update.message.reply_text(f.read(), parse_mode="HTML")
@@ -76,22 +76,22 @@ class InLaTeXbot():
         update.message.reply_text(self._resourceManager.getString("default_preamble")+preamble)
     
     def onSetCustomPreamble(self, bot, update):
-        self._userResponseHandler = MessageHandler(Filters.text, self.onPreambleArrived)
-        self._updater.dispatcher.add_handler(self._userResponseHandler, 1)
+        self._usersRequestedCustomPreambleRegistration.append(update.message.from_user.id)
         update.message.reply_text(self._resourceManager.getString("register_preamble"))
     
     def onPreambleArrived(self, bot, update):
-        preamble = update.message.text
-        update.message.reply_text(self._resourceManager.getString("checking_preamble"))
-        valid, preamble_error_message = self._preambleManager.validatePreamble(preamble)
-        if valid:
-            self.logger.debug("Registering preamble for user %d", update.message.from_user.id)
-            self._preambleManager.putPreambleToDatabase(update.message.from_user.id, preamble)
-            update.message.reply_text(self._resourceManager.getString("preamble_registered"))
-            self._updater.dispatcher.remove_handler(self._userResponseHandler, 1)
-            self._userResponseHandler = None
-        else:
-            update.message.reply_text(preamble_error_message)
+        senderId = update.message.from_user.id
+        if senderId in self._usersRequestedCustomPreambleRegistration:
+            preamble = update.message.text
+            update.message.reply_text(self._resourceManager.getString("checking_preamble"))
+            valid, preamble_error_message = self._preambleManager.validatePreamble(preamble)
+            if valid:
+                self.logger.debug("Registering preamble for user %d", )
+                self._preambleManager.putPreambleToDatabase(senderId, preamble)
+                update.message.reply_text(self._resourceManager.getString("preamble_registered"))
+                self._usersRequestedCustomPreambleRegistration.remove(senderId)
+            else:
+                update.message.reply_text(preamble_error_message)
         
     def onSetCodeInCaptionOn(self, bot, update):
         userId  = update.message.from_user.id

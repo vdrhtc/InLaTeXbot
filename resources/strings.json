@@ -2,7 +2,7 @@
     "greeting_line_one":"Hi there! I'm an inline LaTeX bot, and I can help you to send cool pictures with LaTeX to any chat. Just call me from there and give me the code, like this:",
     "greeting_line_two":"You can also type /help here to see list of available customization commands.",
     "nothing_to_abort":"Nothing to abort!",
-    "operation_aborted":"Operation aborted!",
+    "preamble_registration_aborted":"Preamble registration aborted!",
     "your_preamble_custom":"Here is your custom preamble:\n\n",
     "your_preamble_default":"Your have the default preamble:\n\n",
     "default_preamble":"Here is the default preamble:\n\n",

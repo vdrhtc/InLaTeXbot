@@ -19,12 +19,18 @@ class InLaTeXbotTest(unittest.TestCase):
         self.sut = InLaTeXbot(updater)
         self.sut._preambleManager.putPreambleToDatabase = Mock()
         
-    def testOnPreambleArrived(self):
+    def testPreambleRegistration(self):
+    
+        update = MagicMock()
+        update.message.from_user.id = 115
+        self.sut.onSetCustomPreamble(self.bot, update)
 
         update = MagicMock()
         update.message.reply = Mock()
         update.message.text = Mock()
         update.message.text.__len__ = Mock(return_value = self.sut._resourceManager.getNumber("max_preamble_length")+1)
+        update.message.from_user.id = 115
+        
         self.sut.onPreambleArrived(self.bot, update)
         update.message.reply_text.assert_called_with(self.sut._resourceManager.getString("preamble_too_long")%self.sut._resourceManager.getNumber("max_preamble_length"))
 
