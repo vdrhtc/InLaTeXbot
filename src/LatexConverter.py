@@ -27,6 +27,9 @@ class LatexConverter():
         height = (ruc[1]-llc[1])*size_factor
         translation_x = llc[0]
         translation_y = llc[1]
+        if width == 0 or height == 0:
+            self.logger.warn("Expression had zero width/height bbox!")
+            raise ValueError("Wrong expression!")
         return width, height, -translation_x, -translation_y
     
     def correctBoundingBoxAspectRaito(self, boundingBox, maxWidthToHeight=3, maxHeightToWidth=1):
@@ -65,13 +68,18 @@ class LatexConverter():
         command = 'gs  -o resources/expression_%s.png -r%d -sDEVICE=pngalpha  -g%dx%d  -dLastPage=1 \
                 -c "<</Install {%d %d translate}>> setpagedevice" -f build/expression_file_%s.pdf'\
                 %((sessionId, self._pngResolution)+bbox+(sessionId,))
+        try:
+            check_output(command, stderr=STDOUT, shell=True)
+            with open("resources/expression_%s.png"%sessionId, "rb") as f:
+                binaryDataStream = io.BytesIO(f.read())
+            check_output(["rm build/*_%s.*"%sessionId], stderr=STDOUT, shell=True)
+            check_output(["rm resources/*_%s.png"%sessionId], stderr=STDOUT, shell=True)
+            self.logger.debug("Generated image for %s", expression)
+            return binaryDataStream
             
-        check_output(command, stderr=STDOUT, shell=True)
-        with open("resources/expression_%s.png"%sessionId, "rb") as f:
-            binaryDataStream = io.BytesIO(f.read())
+        except CalledProcessError as inst:
+            self.logger.warn(inst)
+            check_output(["rm build/*_%s.*"%sessionId], stderr=STDOUT, shell=True)
+            return None
             
-        check_output(["rm build/*_%s.*"%sessionId], stderr=STDOUT, shell=True)
-        check_output(["rm resources/*_%s.png"%sessionId], stderr=STDOUT, shell=True)
-        self.logger.debug("Generated image for %s", expression)
-        return binaryDataStream
         

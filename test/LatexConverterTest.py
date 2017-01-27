@@ -28,6 +28,10 @@ class LatexConverterTest(unittest.TestCase):
         self.sut.setPreambleId("11")
         binaryData = self.sut.convertExpressionToPng("$x^2$"*10, 115, "id").read()
         self.assertAlmostEqual(len(binaryData), len(correctBinaryData), delta=50)
+    
+    def testEmptyQuery(self):
+        with self.assertRaises(ValueError):
+            self.sut.convertExpressionToPng("$$$$", 115, "id").read()
         
 if __name__ == '__main__':
     unittest.main()
