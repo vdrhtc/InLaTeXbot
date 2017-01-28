@@ -39,7 +39,7 @@ class InLaTeXbot():
         inline_handler = InlineQueryHandler(self.onInlineQuery)
         self._updater.dispatcher.add_handler(inline_handler)
         
-        self._usersRequestedCustomPreambleRegistration = []
+        self._usersRequestedCustomPreambleRegistration = set()
         
     def launch(self):
         self._updater.start_polling()
@@ -83,7 +83,7 @@ class InLaTeXbot():
         update.message.reply_text(self._resourceManager.getString("default_preamble")+preamble)
     
     def onSetCustomPreamble(self, bot, update):
-        self._usersRequestedCustomPreambleRegistration.append(update.message.from_user.id)
+        self._usersRequestedCustomPreambleRegistration.add(update.message.from_user.id)
         update.message.reply_text(self._resourceManager.getString("register_preamble"))
     
     def onPreambleArrived(self, bot, update):
