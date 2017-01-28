@@ -43,7 +43,7 @@ class LoggingServer():
             if msg[0] == "debug":
                 self.logger.debug(*msg[1])
             elif msg[0] == "warn":
-                self.logger.warn(*msg[1])
+                self.logger.warning(*msg[1])
             
             
             
