@@ -18,6 +18,16 @@ class InLaTeXbotTest(unittest.TestCase):
         
         self.sut = InLaTeXbot(updater)
         self.sut._preambleManager.putPreambleToDatabase = Mock()
+        self.sut._usersManager = Mock()
+        
+    def testOnStart(self):
+        self.sut._usersManager.getKnownUsers = Mock(return_value = {273230920})
+    
+        update = MagicMock()
+        update.message.from_user.id = 273230920
+        self.sut.onStart(self.bot, update)
+        update.message.from_user.id = "lol"
+        self.sut.onStart(self.bot, update)
         
     def testPreambleRegistration(self):
     

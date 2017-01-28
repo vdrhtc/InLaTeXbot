@@ -1,0 +1,5 @@
+v1.0
+ - Preamble customization
+ - Optionally showing raw query as the caption of the generated image
+ - Parallel query processing, dropping obsolete queries
+ - Update notifications, version history

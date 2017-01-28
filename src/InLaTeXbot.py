@@ -9,6 +9,7 @@ from src.ResourceManager import ResourceManager
 from src.InlineQueryResponseDispatcher import InlineQueryResponseDispatcher
 from src.LoggingServer import LoggingServer
 from src.UserOptionsManager import UserOptionsManager
+from src.UsersManager import UsersManager
 
 class InLaTeXbot():
 
@@ -19,6 +20,7 @@ class InLaTeXbot():
         self._updater = updater
         self._resourceManager = ResourceManager()
         self._userOptionsManager = UserOptionsManager()
+        self._usersManager = UsersManager()
         self._preambleManager = PreambleManager(self._resourceManager)
         self._latexConverter = LatexConverter(self._preambleManager)
         self._inlineQueryResponseDispatcher = InlineQueryResponseDispatcher(updater.bot, self._latexConverter, self._resourceManager, self._userOptionsManager, devnullChatId)
@@ -46,6 +48,11 @@ class InLaTeXbot():
         self._updater.stop()
     
     def onStart(self, bot, update):
+        senderId = update.message.from_user.id 
+        if not senderId in self._usersManager.getKnownUsers():
+            self._usersManager.setUser(senderId, {})
+            self.logger.debug("Added a new user to database")
+            
         update.message.reply_text(self._resourceManager.getString("greeting_line_one"))
         with open("resources/demo.png", "rb") as f:
             self._updater.bot.sendPhoto(update.message.from_user.id, f)
@@ -86,7 +93,7 @@ class InLaTeXbot():
             update.message.reply_text(self._resourceManager.getString("checking_preamble"))
             valid, preamble_error_message = self._preambleManager.validatePreamble(preamble)
             if valid:
-                self.logger.debug("Registering preamble for user %d", )
+                self.logger.debug("Registering preamble for user %d", senderId)
                 self._preambleManager.putPreambleToDatabase(senderId, preamble)
                 update.message.reply_text(self._resourceManager.getString("preamble_registered"))
                 self._usersRequestedCustomPreambleRegistration.remove(senderId)
@@ -98,13 +105,20 @@ class InLaTeXbot():
         self._userOptionsManager.setCodeInCaptionOption(userId, True)
     
     def onSetCodeInCaptionOff(self, bot, update):
-        userId  = update.message.from_user.id
+        userId = update.message.from_user.id
         self._userOptionsManager.setCodeInCaptionOption(userId, False)
     
     def onInlineQuery(self, bot, update):
         if not update.inline_query.query:
             return
         self._inlineQueryResponseDispatcher.dispatchInlineQueryResponse(update.inline_query)
+        
+    def broadcastHTMLMessage(self, message):
+        for userId in self._usersManager.getKnownUsers():
+            try:
+                self._updater.bot.sendMessage(userId, message, parse_mode="HTML")
+            except TelegramError as err:
+                self.logger.warn("Could not broadcast message for %d, error: %s", userId, str(err))
             
 if __name__ == '__main__':
     bot = InLaTeXbot()
