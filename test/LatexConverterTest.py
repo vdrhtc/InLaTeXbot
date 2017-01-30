@@ -1,4 +1,6 @@
 import unittest
+import os
+
 from src.LatexConverter import LatexConverter
 from src.PreambleManager import PreambleManager
 from src.ResourceManager import ResourceManager
@@ -28,6 +30,20 @@ class LatexConverterTest(unittest.TestCase):
         self.sut.setPreambleId("11")
         binaryData = self.sut.convertExpressionToPng("$x^2$"*10, 115, "id").read()
         self.assertAlmostEqual(len(binaryData), len(correctBinaryData), delta=50)
+    
+    def testDeleteFilesInAllCases(self):
+        self.sut.convertExpressionToPng("$x^2$", 115, "id")
+        self.assertEqual(len(os.listdir("build/")), 0)
+        
+        try:
+            self.sut.convertExpressionToPng("$$$$", 115, "id").read()
+        except ValueError:
+            self.assertEqual(len(os.listdir("build/")), 0)
+        
+        try:
+            self.sut.convertExpressionToPng("$^$ <> lo_\asdasd", 115, "id").read()
+        except ValueError:
+            self.assertEqual(len(os.listdir("build/")), 0)
     
     def testEmptyQuery(self):
         with self.assertRaises(ValueError):

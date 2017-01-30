@@ -29,7 +29,7 @@ class LatexConverter():
         translation_y = llc[1]
         if width == 0 or height == 0:
             self.logger.warn("Expression had zero width/height bbox!")
-            raise ValueError("Wrong expression!")
+            raise ValueError("Empty expression!")
         return width, height, -translation_x, -translation_y
     
     def correctBoundingBoxAspectRaito(self, boundingBox, maxWidthToHeight=3, maxHeightToWidth=1):
@@ -56,30 +56,28 @@ class LatexConverter():
             
         with open("build/expression_file_%s.tex"%sessionId, "w+") as f:
             f.write(templateString%expression)
-            
         try:
-            check_output(['pdflatex', "-interaction=nonstopmode", "-output-directory", "build", "build/expression_file_%s.tex"%sessionId], stderr=STDOUT).decode("ascii")
-        except CalledProcessError as inst:
-            raise ValueError("Wrong LaTeX syntax in the query")
+            try:
+                check_output(['pdflatex', "-interaction=nonstopmode", "-output-directory", 
+                    "build", "build/expression_file_%s.tex"%sessionId], stderr=STDOUT).decode("ascii")
+            except CalledProcessError as inst:
+                raise ValueError("Wrong LaTeX syntax in the query")
+                
+            bbox = self.extractBoundingBox("build/expression_file_%s.pdf"%sessionId)
+            bbox = self.correctBoundingBoxAspectRaito(bbox)
             
-        bbox = self.extractBoundingBox("build/expression_file_%s.pdf"%sessionId)
-        bbox = self.correctBoundingBoxAspectRaito(bbox)
-        
-        command = 'gs  -o resources/expression_%s.png -r%d -sDEVICE=pngalpha  -g%dx%d  -dLastPage=1 \
-                -c "<</Install {%d %d translate}>> setpagedevice" -f build/expression_file_%s.pdf'\
-                %((sessionId, self._pngResolution)+bbox+(sessionId,))
-        try:
+            command = 'gs  -o resources/expression_%s.png -r%d -sDEVICE=pngalpha  -g%dx%d  -dLastPage=1 \
+                    -c "<</Install {%d %d translate}>> setpagedevice" -f build/expression_file_%s.pdf'\
+                    %((sessionId, self._pngResolution)+bbox+(sessionId,))
             check_output(command, stderr=STDOUT, shell=True)
-            with open("resources/expression_%s.png"%sessionId, "rb") as f:
-                binaryDataStream = io.BytesIO(f.read())
-            check_output(["rm build/*_%s.*"%sessionId], stderr=STDOUT, shell=True)
-            check_output(["rm resources/*_%s.png"%sessionId], stderr=STDOUT, shell=True)
             self.logger.debug("Generated image for %s", expression)
-            return binaryDataStream
             
-        except CalledProcessError as inst:
-            self.logger.warn(inst)
+            with open("resources/expression_%s.png"%sessionId, "rb") as f:
+                return io.BytesIO(f.read())
+        finally:
             check_output(["rm build/*_%s.*"%sessionId], stderr=STDOUT, shell=True)
-            return None
-            
+            try:
+                check_output(["rm resources/*_%s.png"%sessionId], stderr=STDOUT, shell=True)
+            except CalledProcessError:
+                pass
         
