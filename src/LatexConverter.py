@@ -73,11 +73,10 @@ class LatexConverter():
             self.logger.debug("Generated image for %s", expression)
             
             with open("resources/expression_%s.png"%sessionId, "rb") as f:
-                return io.BytesIO(f.read())
+                imageBinaryStream = io.BytesIO(f.read())
+            check_output(["rm resources/*_%s.png"%sessionId], stderr=STDOUT, shell=True)
+            return imageBinaryStream
+                
         finally:
             check_output(["rm build/*_%s.*"%sessionId], stderr=STDOUT, shell=True)
-            try:
-                check_output(["rm resources/*_%s.png"%sessionId], stderr=STDOUT, shell=True)
-            except CalledProcessError:
-                pass
         
