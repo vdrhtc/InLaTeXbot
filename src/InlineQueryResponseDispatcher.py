@@ -51,8 +51,8 @@ class InlineQueryResponseDispatcher():
             expressionPngFileStream = self._latexConverter.convertExpressionToPng(expression, senderId, str(queryId)+str(senderId))
             if not nextQueryArrivedEvent.is_set():
                 result = self.uploadImage(expressionPngFileStream, expression, caption)
-        except ValueError:
-            result = self.getWrongSyntaxResult(expression)
+        except ValueError as err:
+            result = self.getWrongSyntaxResult(expression, err.args[0])
         except TelegramError as err:
             errorMessage = self._resourceManager.getString("telegram_error")+str(err)
             logger.warn(errorMessage)
@@ -68,14 +68,14 @@ class InlineQueryResponseDispatcher():
             return True
         return False
     
-    def getWrongSyntaxResult(self, query):
+    def getWrongSyntaxResult(self, query, latexError):
         if len(query)>=250:
             self.logger.debug("Query may be too long")
             errorMessage= self._resourceManager.getString("inline_query_too_long")
         else:
             self.logger.debug("Wrong syntax in the query")
             errorMessage= self._resourceManager.getString("latex_syntax_error")
-        return InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(query))
+        return InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(query), description = latexError)
             
     def uploadImage(self, image, expression, caption):
         attempts = 0

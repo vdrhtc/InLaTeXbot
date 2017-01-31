@@ -24,6 +24,12 @@ class LatexConverterTest(unittest.TestCase):
         self.sut.logger.debug("Started pdflatex")
         self.sut.pdflatex("resources/test/pdflatex.tex")
         self.sut.logger.debug("Pdflatex finished")
+
+        try: 
+            self.sut.pdflatex("resources/test/pdflatexwerror.tex")
+        except ValueError as err:
+            self.assertEqual(err.args[0], "! Missing lol inserted\nasldkasdaskd;laskd;a\n")
+            
         check_output(["rm build/pdflatex*"], stderr=STDOUT, shell=True)
 
     def testConvertExpressionToPng(self):
@@ -51,7 +57,7 @@ class LatexConverterTest(unittest.TestCase):
             self.assertEqual(len(os.listdir("build/")), 0)
         
         try:
-            self.sut.convertExpressionToPng("$^$ <> lo_\asdasd", 115, "id2").read()
+            self.sut.convertExpressionToPng(r"lo \asdasd", 115, "id2").read()
         except ValueError:
             self.assertEqual(len(os.listdir("build/")), 0)
     

@@ -43,12 +43,20 @@ class LatexConverter():
             width = height/maxHeightToWidth
         return width, height, translation_x, translation_y
         
+    def getError(self, log):
+        for idx, line in enumerate(log):
+            if line[:2]=="! ":
+                return "".join(log[idx:idx+2])
+        
     def pdflatex(self, fileName):
         try:
             check_output(['pdflatex', "-interaction=nonstopmode", "-output-directory", 
                     "build", fileName], stderr=STDOUT).decode("ascii")
         except CalledProcessError as inst:
-            raise ValueError("Wrong LaTeX syntax in the query")
+            with open(fileName[:-3]+"log", "r") as f:
+                msg = self.getError(f.readlines())
+                self.logger.debug(msg)
+                raise ValueError(msg)
             
     def convertPdfToPng(self, sessionId, bbox):
         command = 'gs  -o resources/expression_%s.png -r%d -sDEVICE=pngalpha  -g%dx%d  -dLastPage=1 \
@@ -65,10 +73,11 @@ class LatexConverter():
             self.logger.debug("Preamble for userId %d not found, using default preamble", userId)
             preamble=self._preambleManager.getDefaultPreamble()
             
-        templateString = preamble+"\n\\begin{document}%s\\end{document}"
+        templateString = preamble+"\n\\begin{document}\n%s\n\\end{document}"
             
         with open("build/expression_file_%s.tex"%sessionId, "w+") as f:
             f.write(templateString%expression)
+            
         try:
             self.pdflatex("build/expression_file_%s.tex"%sessionId)
                 
