@@ -42,6 +42,19 @@ class LatexConverter():
             translation_x += (height/maxHeightToWidth-width)/2/size_factor
             width = height/maxHeightToWidth
         return width, height, translation_x, translation_y
+        
+    def pdflatex(self, fileName):
+        try:
+            check_output(['pdflatex', "-interaction=nonstopmode", "-output-directory", 
+                    "build", fileName], stderr=STDOUT).decode("ascii")
+        except CalledProcessError as inst:
+            raise ValueError("Wrong LaTeX syntax in the query")
+            
+    def convertPdfToPng(self, sessionId, bbox):
+        command = 'gs  -o resources/expression_%s.png -r%d -sDEVICE=pngalpha  -g%dx%d  -dLastPage=1 \
+                    -c "<</Install {%d %d translate}>> setpagedevice" -f build/expression_file_%s.pdf'\
+                    %((sessionId, self._pngResolution)+bbox+(sessionId,))
+        check_output(command, stderr=STDOUT, shell=True)
 
     def convertExpressionToPng(self, expression, userId, sessionId):
         
@@ -57,19 +70,12 @@ class LatexConverter():
         with open("build/expression_file_%s.tex"%sessionId, "w+") as f:
             f.write(templateString%expression)
         try:
-            try:
-                check_output(['pdflatex', "-interaction=nonstopmode", "-output-directory", 
-                    "build", "build/expression_file_%s.tex"%sessionId], stderr=STDOUT).decode("ascii")
-            except CalledProcessError as inst:
-                raise ValueError("Wrong LaTeX syntax in the query")
+            self.pdflatex("build/expression_file_%s.tex"%sessionId)
                 
             bbox = self.extractBoundingBox("build/expression_file_%s.pdf"%sessionId)
             bbox = self.correctBoundingBoxAspectRaito(bbox)
             
-            command = 'gs  -o resources/expression_%s.png -r%d -sDEVICE=pngalpha  -g%dx%d  -dLastPage=1 \
-                    -c "<</Install {%d %d translate}>> setpagedevice" -f build/expression_file_%s.pdf'\
-                    %((sessionId, self._pngResolution)+bbox+(sessionId,))
-            check_output(command, stderr=STDOUT, shell=True)
+            self.convertPdfToPng(sessionId, bbox)
             self.logger.debug("Generated image for %s", expression)
             
             with open("resources/expression_%s.png"%sessionId, "rb") as f:

@@ -7,7 +7,11 @@ class PreambleManager():
     
     def __init__(self, resourceManager):
         self._resourceManager = resourceManager
+#        self._defaultPreamble = self.readDefaultPreamble()
         self._lock = Lock()
+        
+#    def getDefaultPreamble(self):
+#        return self._defaultPreamble
         
     def getDefaultPreamble(self):
         with open("./resources/default_preamble.txt", "r") as f:

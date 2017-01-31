@@ -1,5 +1,7 @@
 import unittest
 import os
+from datetime import datetime as dt
+from subprocess import check_output, CalledProcessError, STDOUT
 
 from src.LatexConverter import LatexConverter
 from src.PreambleManager import PreambleManager
@@ -11,10 +13,18 @@ class LatexConverterTest(unittest.TestCase):
         self.sut = LatexConverter(PreambleManager(ResourceManager()), pngResolution=720)
 
     def testExtractBoundingBox(self):
-        pass
+        self.sut.logger.debug("Extracting bbox")
+        self.sut.extractBoundingBox("resources/test/bbox.pdf")
+        self.sut.logger.debug("Extracted bbox")
     
     def testCorrectBoundingBoxAspectRaito(self):
         pass
+    
+    def testPdflatex(self):
+        self.sut.logger.debug("Started pdflatex")
+        self.sut.pdflatex("resources/test/pdflatex.tex")
+        self.sut.logger.debug("Pdflatex finished")
+        check_output(["rm build/pdflatex*"], stderr=STDOUT, shell=True)
 
     def testConvertExpressionToPng(self):
         binaryData = self.sut.convertExpressionToPng("$x^2$", 115, "id").read()
@@ -36,19 +46,30 @@ class LatexConverterTest(unittest.TestCase):
         self.assertEqual(len(os.listdir("build/")), 0)
         
         try:
-            self.sut.convertExpressionToPng("$$$$", 115, "id").read()
+            self.sut.convertExpressionToPng("$$$$", 115, "id1").read()
         except ValueError:
             self.assertEqual(len(os.listdir("build/")), 0)
         
         try:
-            self.sut.convertExpressionToPng("$^$ <> lo_\asdasd", 115, "id").read()
+            self.sut.convertExpressionToPng("$^$ <> lo_\asdasd", 115, "id2").read()
         except ValueError:
             self.assertEqual(len(os.listdir("build/")), 0)
     
     def testEmptyQuery(self):
         with self.assertRaises(ValueError):
             self.sut.convertExpressionToPng("$$$$", 115, "id").read()
+    
+#    def testPerformance(self):
+#        self.sut.logger.debug("Started performance test")
+#        start = dt.now()
+#        for i in range(0, 10):
+#            self.sut.convertExpressionToPng("$x^2$", 115, "id")
+#        elapsedTime = (dt.now()-start).total_seconds()/10*1000
+#        self.sut.logger.debug("Performance test ended, time: %f ms", elapsedTime)
         
 if __name__ == '__main__':
-    unittest.main()
+    test = LatexConverterTest()
+    test.setUp()
+    test.testPerformance()
+#    unittest.main()
     
