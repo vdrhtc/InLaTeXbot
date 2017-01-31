@@ -2,8 +2,8 @@
 
 Inline LaTeX bot for <a href=https://telegram.org>Telegram</a> messenger to send pictures with any LaTeX content to anyone from any device. Find it here: http://t.me/InLaTeXbot. 
 
-##Description
-This bot converts LaTeX expressions to .png images when called in inline mode (@inlatexbot \<your expression\>) and then shows you the image it has generated from your code. Everything happens live, so you can just gradually type in your expression and continuously monitor the result. Latex syntax errors, if any, will also be displayed instead of the image. When you are ready, click or tap the suggested picture to send it.
+##Description and general usage
+This bot converts LaTeX expressions to .png images when called in inline mode (@inlatexbot \<your expression\>) and then shows you the image it has generated from your code. Everything happens live, so you can just gradually type and continuously monitor the result. When expression contains errors, they will be displayed instead of the image. Finally, when you are ready, click or tap the suggested picture to send it.
 
 <img width=200 src=https://cloud.githubusercontent.com/assets/3819012/21800504/56bf38ec-d737-11e6-8b8b-e4e3b90d43ae.png />
 <img width=200 src=https://cloud.githubusercontent.com/assets/3819012/21800503/56be411c-d737-11e6-8598-e43fb7126eb3.png />
