@@ -114,6 +114,11 @@ class InLaTeXbot():
         self._inlineQueryResponseDispatcher.dispatchInlineQueryResponse(update.inline_query)
         
     def broadcastHTMLMessage(self, message):
+        var = input("Are you sure? yes/[no]: ")
+        if var != "yes":
+            print("Aborting!")
+            return
+            
         for userId in self._usersManager.getKnownUsers():
             try:
                 self._updater.bot.sendMessage(userId, message, parse_mode="HTML")
