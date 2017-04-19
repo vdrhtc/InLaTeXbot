@@ -55,7 +55,7 @@ class InlineQueryResponseDispatcher():
             result = self.getWrongSyntaxResult(expression, err.args[0])
         except TelegramError as err:
             errorMessage = self._resourceManager.getString("telegram_error")+str(err)
-            logger.warn(errorMessage)
+            self.logger.warn(errorMessage)
             result = InlineQueryResultArticle(0, errorMessage, InputTextMessageContent(expression))
         finally:
             if not self.skipForNewerQuery(nextQueryArrivedEvent, senderId, expression):
