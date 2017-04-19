@@ -55,6 +55,24 @@ class InLaTeXbotTest(unittest.TestCase):
         self.assertTrue(115 in self.sut._usersRequestedCustomPreambleRegistration)
         self.sut.onAbort(self.bot, update)
         self.assertFalse(115 in self.sut._usersRequestedCustomPreambleRegistration)
+        
+    def testPreambleSetupAndEventConsumed(self):
+        self.sut.onPreambleArrived = Mock()
+        self.sut.onExpressionArrived = Mock()
+        update = MagicMock()
+        update.message.from_user.id = 115
+        self.sut.onSetCustomPreamble(self.bot, update)
+
+        preamble = "TEST"
+        update = Mock()
+        message = Mock()
+        message.text = preamble
+        message.from_user.id = 115
+        update.message = message
+        
+        self.sut.dispatchTextMessage(self.bot, update)
+        self.assertTrue(self.sut.onPreambleArrived.called)
+        self.assertFalse(self.sut.onExpressionArrived.called)
 
     def testOnInlineQuery(self):
         self.sut._inlineQueryResponseDispatcher = Mock()
@@ -66,6 +84,18 @@ class InLaTeXbotTest(unittest.TestCase):
         self.sut.onInlineQuery(self.bot, update)
         self.sut._inlineQueryResponseDispatcher.dispatchInlineQueryResponse.assert_called_with(update.inline_query)
         
+    def testDispatchExpressionMessage(self):
+        self.sut._messageQueryResponseDispatcher = Mock()
+
+        expression = "TEST"
+        update = Mock()
+        message = Mock()
+        message.text = expression
+        update.message = message 
+        
+        self.sut.dispatchTextMessage(self.bot, update)
+        
+        self.sut._messageQueryResponseDispatcher.dispatchMessageQueryResponse.assert_called_with(message)
         
 if __name__ == '__main__':
     unittest.main()

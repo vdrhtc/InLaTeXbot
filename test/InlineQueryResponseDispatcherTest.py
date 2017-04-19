@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock, MagicMock, ANY
 
 from time import sleep
 
@@ -33,7 +33,7 @@ class InlineQueryResponseDispatcherTest(unittest.TestCase):
         
         self.sut.respondToInlineQuery(inline_query, nextQueryArrivedEvent)
         
-        bot.sendPhoto.assert_called()
+        bot.sendPhoto.assert_called_with(ANY, ANY)
         
     def testRespondToTwoConsequentInlineQueries(self):
         bot = Mock()

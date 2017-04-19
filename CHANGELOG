@@ -1,5 +1,13 @@
-v1.0
+v1
  - Preamble customization
  - Optionally showing raw query as the caption of the generated image
  - Parallel query processing, dropping obsolete queries
  - Update notifications, version history
+ 
+ v2
+ - In case of a syntax error an error message is displayed instead of the image
+ - DPI of the generated images may be set by user
+ - Queries can now also be processed by sending the bot expressions directly
+   - This way larger queries may now be processed
+   - Cropped PDF with the expression is returned as well for vector graphics applications
+ 

@@ -1,4 +1,6 @@
 import unittest
+from unittest.mock import Mock
+
 import os
 from datetime import datetime as dt
 from subprocess import check_output, CalledProcessError, STDOUT
@@ -6,15 +8,18 @@ from subprocess import check_output, CalledProcessError, STDOUT
 from src.LatexConverter import LatexConverter
 from src.PreambleManager import PreambleManager
 from src.ResourceManager import ResourceManager
+from src.UserOptionsManager import UserOptionsManager
 
 class LatexConverterTest(unittest.TestCase):
 
     def setUp(self):
-        self.sut = LatexConverter(PreambleManager(ResourceManager()), pngResolution=720)
+        userOptionsManager = Mock()
+        userOptionsManager.getDpiOption = Mock(return_value = 720)
+        self.sut = LatexConverter(PreambleManager(ResourceManager()), userOptionsManager)
 
     def testExtractBoundingBox(self):
         self.sut.logger.debug("Extracting bbox")
-        self.sut.extractBoundingBox("resources/test/bbox.pdf")
+        self.sut.extractBoundingBox(720, "resources/test/bbox.pdf")
         self.sut.logger.debug("Extracted bbox")
     
     def testCorrectBoundingBoxAspectRaito(self):
@@ -43,10 +48,6 @@ class LatexConverterTest(unittest.TestCase):
             correctBinaryData = f.read()
         self.assertAlmostEqual(len(binaryData), len(correctBinaryData), delta=50)
         
-        self.sut.setPreambleId("11")
-        binaryData = self.sut.convertExpressionToPng("$x^2$"*10, 115, "id").read()
-        self.assertAlmostEqual(len(binaryData), len(correctBinaryData), delta=50)
-    
     def testDeleteFilesInAllCases(self):
         self.sut.convertExpressionToPng("$x^2$", 115, "id")
         self.assertEqual(len(os.listdir("build/")), 0)
@@ -64,6 +65,13 @@ class LatexConverterTest(unittest.TestCase):
     def testEmptyQuery(self):
         with self.assertRaises(ValueError):
             self.sut.convertExpressionToPng("$$$$", 115, "id").read()
+            
+    def testReturnPdf(self):
+        pdfBinaryData = self.sut.convertExpressionToPng("lol", 115, "id", True)[1].read()
+        with open('resources/test/cropped.pdf', "rb") as f:
+            correctBinaryData = f.read()
+        self.assertAlmostEqual(len(pdfBinaryData), len(correctBinaryData), delta=50)
+        
     
 #    def testPerformance(self):
 #        self.sut.logger.debug("Started performance test")

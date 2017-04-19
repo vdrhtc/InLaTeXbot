@@ -1,12 +1,32 @@
 import pickle
 from multiprocessing import Lock
 
+from src.LoggingServer import LoggingServer
+
 class UserOptionsManager():
+
     
     def __init__(self, optionsFile = "./resources/options.pkl"):
         self._optionsFile = optionsFile
         self._lock = Lock()
+    
+    def getDpiOption(self, userId):
+        try:
+            userOptions = self.getUserOptions(userId)
+        except KeyError:
+            userOptions = self.getDefaultUserOptions()
+        try:
+            return userOptions['dpi']
+        except KeyError:
+            return self.getDefaultUserOptions()["dpi"]
         
+    def setDpiOption(self, userId, value):
+        try:
+            userOptions = self.getUserOptions(userId)
+        except KeyError:
+            userOptions = self.getDefaultUserOptions()
+        userOptions['dpi'] = value
+        self.setUserOptions(userId, userOptions)
         
     def getCodeInCaptionOption(self, userId):
         try:
@@ -38,4 +58,4 @@ class UserOptionsManager():
                 pickle.dump(options, f)
         
     def getDefaultUserOptions(self):
-        return {'show_code_in_caption': False}
+        return {'show_code_in_caption': False, "dpi":300}

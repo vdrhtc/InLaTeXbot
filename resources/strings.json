@@ -1,6 +1,6 @@
 {
-    "greeting_line_one":"Hi there! I'm an inline LaTeX bot, and I can help you to send cool pictures with LaTeX to any chat. Just call me from there and give me the code, like this:",
-    "greeting_line_two":"You can also type /help here to see list of available customization commands.",
+    "greeting_line_one":"Hi there! I'm a LaTeX converter bot, and I can help you to send cool pictures with LaTeX to any chat. Just call me from there and give me the code, like this:",
+    "greeting_line_two":"If you have a large expression or need vectorized graphics, you can send me a message with your code here; I'll reply with a PDF and a preview image.\n\nYou can also type /help here to see the list of available customization commands.",
     "nothing_to_abort":"Nothing to abort!",
     "preamble_registration_aborted":"Preamble registration aborted!",
     "your_preamble_custom":"Here is your custom preamble:\n\n",
@@ -9,11 +9,13 @@
     "register_preamble":"Great. Let's register a custom preamble for you. Just message me the code, and I'll deal with everything else.",
     "checking_preamble":"Cool. Let me check it...",
     "preamble_registered":"Congratulations, your preamble is valid and now will be used for your queries.",
-    "preamble_invalid":"Tough luck, it doesn't compile! Check your code!",
-    "preamble_too_long":"Sorry, I can only accept preambles not longer than %d characters. Remember the 3Cs rule!",
+    "preamble_invalid":"An empty file with your preamble results in a compilation error. Check your code!",
+    "preamble_too_long":"Sorry, I can only accept preambles up to %d characters long.",
     "latex_syntax_error":"Syntax error!",
     "inline_query_too_long":"Syntax error. Your query may be too long!",
-    "telegram_error":"Telegram error: "
+    "telegram_error":"Telegram error: ",
+    "dpi_value_error":"The requested DPI value can't be used. Only integer values between 100 and 1000 are supported.",
+    "dpi_set":"DPI was set to %d."
 }
 
 

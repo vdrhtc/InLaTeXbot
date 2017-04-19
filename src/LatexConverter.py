@@ -8,21 +8,17 @@ class LatexConverter():
 
     logger = LoggingServer.getInstance()
     
-    def __init__(self, preambleManager, preambleId = "default", pngResolution=300):
-         self._preambleId = preambleId
-         self._pngResolution = pngResolution
+    def __init__(self, preambleManager, userOptionsManager):
          self._preambleManager = preambleManager
-         
-    def setPreambleId(self, preambleId):
-        self._preambleId = preambleId
+         self._userOptionsManager = userOptionsManager
 
-    def extractBoundingBox(self, pathToPdf):
+    def extractBoundingBox(self, dpi, pathToPdf):
         bbox = check_output("gs -q -dBATCH -dNOPAUSE -sDEVICE=bbox "+pathToPdf, 
                             stderr=STDOUT, shell=True).decode("ascii")
         bounds = [int(_) for _ in bbox[bbox.index(":")+2:bbox.index("\n")].split(" ")]
         llc = bounds[:2]
         ruc = bounds[2:]
-        size_factor = self._pngResolution/72
+        size_factor = dpi/72
         width = (ruc[0]-llc[0])*size_factor
         height = (ruc[1]-llc[1])*size_factor
         translation_x = llc[0]
@@ -32,9 +28,9 @@ class LatexConverter():
             raise ValueError("Empty expression!")
         return width, height, -translation_x, -translation_y
     
-    def correctBoundingBoxAspectRaito(self, boundingBox, maxWidthToHeight=3, maxHeightToWidth=1):
+    def correctBoundingBoxAspectRaito(self, dpi, boundingBox, maxWidthToHeight=3, maxHeightToWidth=1):
         width, height, translation_x, translation_y = boundingBox
-        size_factor = self._pngResolution/72
+        size_factor = dpi/72
         if width>maxWidthToHeight*height:
             translation_y += (width/maxWidthToHeight-height)/2/size_factor
             height = width/maxWidthToHeight
@@ -57,14 +53,24 @@ class LatexConverter():
                 msg = self.getError(f.readlines())
                 self.logger.debug(msg)
                 raise ValueError(msg)
+    
+    def cropPdf(self, sessionId):
+        bbox = check_output("gs -q -dBATCH -dNOPAUSE -sDEVICE=bbox build/expression_file_%s.pdf"%sessionId, 
+                            stderr=STDOUT, shell=True).decode("ascii")
+        bounds = tuple([int(_) for _ in bbox[bbox.index(":")+2:bbox.index("\n")].split(" ")])
+
+        command_crop = 'gs -o build/expression_file_cropped_%s.pdf -sDEVICE=pdfwrite\
+                         -c "[/CropBox [%d %d %d %d]"   -c " /PAGES pdfmark" -f build/expression_file_%s.pdf'\
+                         %((sessionId,)+bounds+(sessionId,))
+        check_output(command_crop, stderr=STDOUT, shell=True)
             
-    def convertPdfToPng(self, sessionId, bbox):
-        command = 'gs  -o resources/expression_%s.png -r%d -sDEVICE=pngalpha  -g%dx%d  -dLastPage=1 \
+    def convertPdfToPng(self, dpi, sessionId, bbox):
+        command = 'gs  -o build/expression_%s.png -r%d -sDEVICE=pngalpha  -g%dx%d  -dLastPage=1 \
                     -c "<</Install {%d %d translate}>> setpagedevice" -f build/expression_file_%s.pdf'\
-                    %((sessionId, self._pngResolution)+bbox+(sessionId,))
+                    %((sessionId, dpi)+bbox+(sessionId,))
         check_output(command, stderr=STDOUT, shell=True)
 
-    def convertExpressionToPng(self, expression, userId, sessionId):
+    def convertExpressionToPng(self, expression, userId, sessionId, returnPdf = False):
         
         preamble=""
         try:
@@ -77,20 +83,28 @@ class LatexConverter():
             
         with open("build/expression_file_%s.tex"%sessionId, "w+") as f:
             f.write(templateString%expression)
-            
+        
+        dpi = self._userOptionsManager.getDpiOption(userId)
+        
         try:
             self.pdflatex("build/expression_file_%s.tex"%sessionId)
                 
-            bbox = self.extractBoundingBox("build/expression_file_%s.pdf"%sessionId)
-            bbox = self.correctBoundingBoxAspectRaito(bbox)
+            bbox = self.extractBoundingBox(dpi, "build/expression_file_%s.pdf"%sessionId)
+            bbox = self.correctBoundingBoxAspectRaito(dpi, bbox)
+            self.convertPdfToPng(dpi, sessionId, bbox)
             
-            self.convertPdfToPng(sessionId, bbox)
             self.logger.debug("Generated image for %s", expression)
             
-            with open("resources/expression_%s.png"%sessionId, "rb") as f:
+            with open("build/expression_%s.png"%sessionId, "rb") as f:
                 imageBinaryStream = io.BytesIO(f.read())
-            check_output(["rm resources/*_%s.png"%sessionId], stderr=STDOUT, shell=True)
-            return imageBinaryStream
+
+            if returnPdf:
+                self.cropPdf(sessionId)
+                with open("build/expression_file_cropped_%s.pdf"%sessionId, "rb") as f:
+                    pdfBinaryStream = io.BytesIO(f.read())
+                return imageBinaryStream, pdfBinaryStream
+            else:
+                return imageBinaryStream
                 
         finally:
             check_output(["rm build/*_%s.*"%sessionId], stderr=STDOUT, shell=True)
