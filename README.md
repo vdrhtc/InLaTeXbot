@@ -7,7 +7,7 @@ This bot converts LaTeX expressions to .png images when called in inline mode (@
 
 <img width=200 src=https://cloud.githubusercontent.com/assets/3819012/21800504/56bf38ec-d737-11e6-8b8b-e4e3b90d43ae.png /><img width=200 src=https://cloud.githubusercontent.com/assets/3819012/21800503/56be411c-d737-11e6-8598-e43fb7126eb3.png /><img width=200 src=https://cloud.githubusercontent.com/assets/3819012/21800505/56e9283c-d737-11e6-9195-1be0c2ca046c.png />
 
-Since v2.0 the bot also supports direct conversion of LaTeX expressions in a conversation. You can send it messages containing the code, and it will respond with a .pdf file and an image containing the expression. This allows larger (than in the inline mode) expressions to be converted; moreover, .pdf format contains graphics in vector format, so further processing of the expression in a VG application, i.e. in Inkscape, is possible.
+Since v2.0 the bot also supports direct conversion of LaTeX expressions in a conversation. You can send it messages containing the code, and it will respond with a .pdf file and an image containing the expression. This allows larger (than in the inline mode) expressions to be converted; moreover, .pdf file contains graphics in vector format, so further processing of the expression in a VG application, i.e. in Inkscape, is possible.
 
 ## Customization
 The main feature of the bot is the customizable preamble used in the document into which your expression will be inserted:
