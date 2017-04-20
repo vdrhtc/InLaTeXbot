@@ -110,6 +110,7 @@ class InLaTeXbot():
     
     def onPreambleArrived(self, bot, update):
         preamble = update.message.text
+        senderId = update.message.from_user.id
         update.message.reply_text(self._resourceManager.getString("checking_preamble"))
         valid, preamble_error_message = self._preambleManager.validatePreamble(preamble)
         if valid:

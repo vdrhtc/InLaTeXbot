@@ -29,7 +29,7 @@ class InLaTeXbotTest(unittest.TestCase):
         update.message.from_user.id = "lol"
         self.sut.onStart(self.bot, update)
         
-    def testPreambleRegistration(self):
+    def testIncorrectPreambleRegistration(self):
     
         update = MagicMock()
         update.message.from_user.id = 115
@@ -45,7 +45,21 @@ class InLaTeXbotTest(unittest.TestCase):
         self.assertTrue(115 in self.sut._usersRequestedCustomPreambleRegistration)
         self.sut.onAbort(self.bot, update)
         self.assertFalse(115 in self.sut._usersRequestedCustomPreambleRegistration)
+        
+    def testCorrectPreambleRegistration(self):
+    
+        update = MagicMock()
+        update.message.from_user.id = 115
+        self.sut.onSetCustomPreamble(self.bot, update)
+        
+        self.sut.onSetCustomPreamble(self.bot, update)
+    
+        update = MagicMock()
+        update.message.text = "\documentclass{article}"
+        update.message.from_user.id = 115
 
+        self.sut.onPreambleArrived(self.bot, update)
+    
     def testDoublePreambleSetup(self):
         update = MagicMock()
         update.message.from_user.id = 115

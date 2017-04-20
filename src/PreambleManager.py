@@ -5,8 +5,9 @@ from src.ResourceManager import ResourceManager
 
 class PreambleManager():
     
-    def __init__(self, resourceManager):
+    def __init__(self, resourceManager, preamblesFile = "./resources/preambles.pkl"):
         self._resourceManager = resourceManager
+        self._preamblesFile = preamblesFile
 #        self._defaultPreamble = self.readDefaultPreamble()
         self._lock = Lock()
         
@@ -19,16 +20,16 @@ class PreambleManager():
     
     def getPreambleFromDatabase(self, preambleId):
         with self._lock:
-            with open("./resources/preambles.pkl", "rb") as f:
+            with open(self._preamblesFile, "rb") as f:
                 preambles = pkl.load(f)
             return preambles[preambleId]
     
     def putPreambleToDatabase(self, preambleId, preamble):
         with self._lock:
-            with open("./resources/preambles.pkl", "rb") as f:
+            with open(self._preamblesFile, "rb") as f:
                 preambles = pkl.load(f)
             preambles[preambleId] = preamble
-            with open("./resources/preambles.pkl", "wb") as f:
+            with open(self._preamblesFile, "wb") as f:
                 pkl.dump(preambles, f)
     
     def validatePreamble(self, preamble):
