@@ -70,7 +70,7 @@ class InLaTeXbot():
         try:
             self._usersRequestedCustomPreambleRegistration.remove(senderId)
             update.message.reply_text(self._resourceManager.getString("preamble_registration_aborted"))            
-        except ValueError:
+        except KeyError:
             update.message.reply_text(self._resourceManager.getString("nothing_to_abort"))            
             
     def onHelp(self, bot, update):
