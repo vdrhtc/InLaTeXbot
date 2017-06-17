@@ -37,11 +37,13 @@ class PreambleManager():
             return False, self._resourceManager.getString("preamble_too_long")%self._resourceManager.getNumber("max_preamble_length")
             
         document = preamble+"\n\\begin{document}TEST PREAMBLE\\end{document}"
-        with open("/tmp/validate_preamble.tex", "w+") as f:
+        with open("./build/validate_preamble.tex", "w+") as f:
             f.write(document)
         try:
-            check_output(['pdflatex', "-interaction=nonstopmode","-draftmode", "-output-directory", "/tmp", "/tmp/validate_preamble.tex"], stderr=STDOUT)
+            check_output(['pdflatex', "-interaction=nonstopmode","-draftmode", "-output-directory", "./build", "./build/validate_preamble.tex"], stderr=STDOUT)
             return True, ""
         except CalledProcessError as inst:
             return False, self._resourceManager.getString("preamble_invalid")
+        finally:
+            check_output(["rm ./build/validate_preamble.*"], stderr=STDOUT, shell=True)
     
