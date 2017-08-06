@@ -36,7 +36,7 @@ Bot should be currently online, so in case it's down it's either maintenance or 
 
 ## Support the project
 Donations accepted here:
-
-<img width=100 src="http://i.imgur.com/5NMEEn5.png"/>
-
+<p align="center">
+<img width=100 src="http://i.imgur.com/5NMEEn5.png"/><br>
 19zoPbX97u5QyJDwtpT4uGyPUGX6Ehxmpx
+</p>
