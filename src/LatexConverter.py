@@ -1,4 +1,4 @@
-from subprocess import check_output, CalledProcessError, STDOUT
+from subprocess import check_output, CalledProcessError, STDOUT, TimeoutExpired
 
 from src.PreambleManager import PreambleManager
 from src.LoggingServer import LoggingServer
@@ -47,11 +47,14 @@ class LatexConverter():
     def pdflatex(self, fileName):
         try:
             check_output(['pdflatex', "-interaction=nonstopmode", "-output-directory", 
-                    "build", fileName], stderr=STDOUT).decode("ascii")
+                    "build", fileName], stderr=STDOUT, timeout=5).decode("ascii")
         except CalledProcessError as inst:
             with open(fileName[:-3]+"log", "r") as f:
                 msg = self.getError(f.readlines())
                 self.logger.debug(msg)
+                raise ValueError(msg)
+        except TimeoutExpired:
+                msg = "Pdflatex has likely hung up and had to be killed. Congratulations!"
                 raise ValueError(msg)
     
     def cropPdf(self, sessionId):

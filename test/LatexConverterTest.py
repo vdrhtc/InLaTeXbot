@@ -37,6 +37,12 @@ class LatexConverterTest(unittest.TestCase):
             
         check_output(["rm build/pdflatex*"], stderr=STDOUT, shell=True)
 
+    def testPdflatexHangupHandling(self):
+        try:
+            self.sut.pdflatex("resources/test/pdflatex_hanging_file.tex")
+        except ValueError as err:
+            self.assertEqual(err.args[0], "Pdflatex has likely hung up and had to be killed. Congratulations!")
+
     def testConvertExpressionToPng(self):
         binaryData = self.sut.convertExpressionToPng("$x^2$", 115, "id").read()
         with open('resources/test/xsquared.png', "rb") as f:
