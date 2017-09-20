@@ -17,7 +17,7 @@ class MessageQueryResponseDispatcher():
     def dispatchMessageQueryResponse(self, message):
         
         self.logger.debug("Received message message: "+message.text+\
-                                ", id: "+str(message.message_id)+", from user: "+str(message.from_user.id))
+                   ", id: "+str(message.message_id)+", from: "+str(message.chat.id))
                                 
         responder = Process(target = self.respondToMessageQuery, args=[message])
         responder.start()
@@ -28,14 +28,15 @@ class MessageQueryResponseDispatcher():
 
     def respondToMessageQuery(self, message):
         senderId = message.from_user.id
+        chatId = message.chat.id
         messageId = message.message_id
         expression = message.text
         
         errorMessage = None
         try:
             imageStream, pdfStream = self._latexConverter.convertExpressionToPng(expression, senderId, str(messageId)+str(senderId), returnPdf=True)
-            self._bot.sendDocument(senderId, pdfStream, filename="expression.pdf")
-            self._bot.sendPhoto(senderId, imageStream)
+            self._bot.sendDocument(chatId, pdfStream, filename="expression.pdf")
+            self._bot.sendPhoto(chatId, imageStream)
         except ValueError as err:
             errorMessage = self.getWrongSyntaxResult(expression, err.args[0])
         except TelegramError as err:
@@ -43,8 +44,9 @@ class MessageQueryResponseDispatcher():
             self.logger.warn(errorMessage)
         finally:
             if not errorMessage is None:
-                self._bot.sendMessage(senderId, errorMessage)
-            self.logger.debug("Answered to message from %d, expression: %s", senderId, expression)
+                self._bot.sendMessage(chatId, errorMessage)
+            self.logger.debug("Answered to message from %d, chatId %d, expression: %s", 
+                                                        senderId, chatId, expression)
     
     def getWrongSyntaxResult(self, message, latexError):
         self.logger.debug("Wrong syntax in the message")
