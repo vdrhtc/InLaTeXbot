@@ -37,6 +37,13 @@ Bot should be currently online, so in case it's down it's either maintenance or 
 ## Support the project
 Donations accepted here:
 <p align="center">
+Bitcoin:<br>
 <img width=100 src="http://i.imgur.com/5NMEEn5.png"/><br>
 19zoPbX97u5QyJDwtpT4uGyPUGX6Ehxmpx
 </p>
+<p align="center">
+Ethereum:<br>
+<img width=90 src="https://i.imgur.com/wpqRy9L.png"/><br>
+0x00f1a1c98F77b9747467460De1Cf8e66D24c5552
+</p>
+
