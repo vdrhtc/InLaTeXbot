@@ -2,6 +2,7 @@ from telegram import InlineQueryResultArticle, InputTextMessageContent, \
     InlineQueryResultCachedPhoto, InlineQueryResult, TelegramError
 from telegram.ext import Updater, CommandHandler, InlineQueryHandler, \
     MessageHandler, Filters
+import html
 
 from src.LatexConverter import LatexConverter
 from src.PreambleManager import PreambleManager
@@ -151,6 +152,7 @@ class InLaTeXbot():
     def onInlineQuery(self, bot, update):
         if not update.inline_query.query:
             return
+        update.inline_query.query = html.unescape(update.inline_query.query)
         self._inlineQueryResponseDispatcher.dispatchInlineQueryResponse(update.inline_query)
         
     def broadcastHTMLMessage(self, message):
