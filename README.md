@@ -38,6 +38,8 @@ Bot should be currently online, so in case it's down it's either maintenance or 
 <p align="center">
 Patreon:<br>
 https://www.patreon.com/vdrhtc<br>
+</p>
+<p align="center">
 Bitcoin:<br>
 <img width=100 src="http://i.imgur.com/5NMEEn5.png"/><br>
 19zoPbX97u5QyJDwtpT4uGyPUGX6Ehxmpx
