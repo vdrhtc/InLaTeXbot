@@ -35,7 +35,10 @@ The preamble length is currently limited by 4000 characters as it's not clear ho
 Bot should be currently online, so in case it's down it's either maintenance or some emergency. Also, feel free to open an issue if you find a bug or contact me <a href=http://t.me/vdrhtc>directly</a> in Telegram should you have any related questions.
 
 ## Support the project
-Donations accepted here:
+<p align="center">
+Patreon:<br>
+https://www.patreon.com/vdrhtc<br>
+</p>
 <p align="center">
 Bitcoin:<br>
 <img width=100 src="http://i.imgur.com/5NMEEn5.png"/><br>
