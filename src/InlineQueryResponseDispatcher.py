@@ -48,7 +48,7 @@ class InlineQueryResponseDispatcher():
         
         result = None
         try:
-            expressionPngFileStream = self._latexConverter.convertExpressionToPng(expression, senderId, str(queryId)+str(senderId))
+            expressionPngFileStream = self._latexConverter.convertExpressionToPng(expression, senderId, str(queryId)+"_"+str(senderId))
             if not nextQueryArrivedEvent.is_set():
                 result = self.uploadImage(expressionPngFileStream, expression, caption)
         except ValueError as err:

@@ -78,14 +78,15 @@ class LatexConverter():
         preamble=""
         try:
             preamble=self._preambleManager.getPreambleFromDatabase(userId)
+            self.logger.debug("Preamble for userId %d found", userId)
         except KeyError:
             self.logger.debug("Preamble for userId %d not found, using default preamble", userId)
             preamble=self._preambleManager.getDefaultPreamble()
             
-        templateString = preamble+"\n\\begin{document}\n%s\n\\end{document}"
+        fileString = preamble+"\n\\begin{document}\n"+expression+"\n\\end{document}"
             
         with open("build/expression_file_%s.tex"%sessionId, "w+") as f:
-            f.write(templateString%expression)
+            f.write(fileString)
         
         dpi = self._userOptionsManager.getDpiOption(userId)
         

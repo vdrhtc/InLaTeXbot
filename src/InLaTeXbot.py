@@ -153,6 +153,7 @@ class InLaTeXbot():
         if not update.inline_query.query:
             return
         update.inline_query.query = html.unescape(update.inline_query.query)
+        update.inline_query.query = update.inline_query.query.replace("<br/>", "\n")
         self._inlineQueryResponseDispatcher.dispatchInlineQueryResponse(update.inline_query)
         
     def broadcastHTMLMessage(self, message):
