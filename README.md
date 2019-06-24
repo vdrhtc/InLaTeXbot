@@ -30,7 +30,7 @@ The customization applies both to the inline and standard modes.
 ## Limitations
 The expression length is limited by the length of the inline query to approximately 250 characters (despite the statement in the API docs that inline queries can span up to 512 characters)
 
-The preamble length is currently limited by 4000 characters as it's not clear how long are the longest messages Telegram can process.
+The preamble length is currently limited by 4000 characters as the longest messages that Telegram can send in one piece are of 4096 chars.
 
 Bot should be currently online, so in case it's down it's either maintenance or some emergency. Also, feel free to open an issue if you find a bug or contact me <a href=http://t.me/vdrhtc>directly</a> in Telegram should you have any related questions.
 
