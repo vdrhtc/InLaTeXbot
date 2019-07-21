@@ -12,8 +12,8 @@ class PreambleManagerTest(unittest.TestCase):
     def testValidatePreamble(self):
         self.assertEqual(self.sut.validatePreamble(self.sut.getDefaultPreamble()), (True, ""))
 
-        incorrect_preamble="\documentclass[12pt]{arti}"
-        self.assertEqual(self.sut.validatePreamble(incorrect_preamble), (False, self.resourceManager.getString("preamble_invalid")))
+        incorrect_preamble=r"\documentclass[12pt]{article}\usepackage{mathbb}"
+        self.assertEqual(self.sut.validatePreamble(incorrect_preamble), (False, self.resourceManager.getString("preamble_invalid")+"\n! LaTeX Error: File `mathbb.sty' not found.\n"))
         
         too_long_preamble=Mock()
         too_long_preamble.__len__ = Mock(return_value = self.resourceManager.getNumber("max_preamble_length")+1)

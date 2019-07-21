@@ -19,6 +19,7 @@ class MessageQueryResponseDispatcherTest(unittest.TestCase):
         message = Mock()
         message.id=111
         message.from_user.id = 115
+        message.chat.id = 115
         message.text="$x^2$"
         
         bot = Mock()

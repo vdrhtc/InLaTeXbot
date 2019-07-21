@@ -77,7 +77,11 @@ class LatexConverterTest(unittest.TestCase):
         with open('resources/test/cropped.pdf', "rb") as f:
             correctBinaryData = f.read()
         self.assertAlmostEqual(len(pdfBinaryData), len(correctBinaryData), delta=50)
-        
+       
+    #def testPrivacySettings(self):
+    #    self.sut.logger.debug("Started pdflatex")
+    #    self.sut.pdflatex("resources/test/privacy.tex")
+    #    self.sut.logger.debug("Pdflatex finished")
     
 #    def testPerformance(self):
 #        self.sut.logger.debug("Started performance test")

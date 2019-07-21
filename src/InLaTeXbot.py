@@ -156,15 +156,16 @@ class InLaTeXbot():
         update.inline_query.query = update.inline_query.query.replace("<br/>", "\n")
         self._inlineQueryResponseDispatcher.dispatchInlineQueryResponse(update.inline_query)
         
-    def broadcastHTMLMessage(self, message):
+    def broadcastHTMLMessage(self, message, userIds, parse_mode="HTML"):
         var = input("Are you sure? yes/[no]: ")
         if var != "yes":
             print("Aborting!")
             return
             
-        for userId in self._usersManager.getKnownUsers():
+        for userId in userIds:
+            print("\rUser:", userId, end="", flush=True) 
             try:
-                self._updater.bot.sendMessage(userId, message, parse_mode="HTML")
+                self._updater.bot.sendMessage(userId, message, parse_mode=parse_mode)
             except TelegramError as err:
                 self.logger.warn("Could not broadcast message for %d, error: %s", userId, str(err))
             

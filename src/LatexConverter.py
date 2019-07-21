@@ -47,7 +47,7 @@ class LatexConverter():
     def pdflatex(self, fileName):
         try:
             check_output(['pdflatex', "-interaction=nonstopmode", "-output-directory", 
-                    "build", fileName], stderr=STDOUT, timeout=5).decode("ascii")
+                    "build", fileName], stderr=STDOUT, timeout=5)
         except CalledProcessError as inst:
             with open(fileName[:-3]+"log", "r") as f:
                 msg = self.getError(f.readlines())
