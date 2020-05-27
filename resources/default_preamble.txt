@@ -6,6 +6,8 @@
 \usepackage{textcomp}
 \usepackage{lastpage}
 \usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
 \usepackage{physics}
 \usepackage{lipsum}
 \pagenumbering{gobble}
