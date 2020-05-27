@@ -16,16 +16,24 @@ class LatexConverter():
         bbox = check_output("gs -q -dBATCH -dNOPAUSE -sDEVICE=bbox "+pathToPdf, 
                             stderr=STDOUT, shell=True).decode("ascii")
         bounds = [int(_) for _ in bbox[bbox.index(":")+2:bbox.index("\n")].split(" ")]
+
+        if bounds[0] == bounds[2] or bounds[1] == bounds[3]:
+            self.logger.warn("Expression had zero width/height bbox!")
+            raise ValueError("Empty expression!")
+
+        hpad = 0.25 * 72  # 72 postscript points = 1 inch
+        vpad = .1 * 72
         llc = bounds[:2]
+        llc[0] -= hpad
+        llc[1] -= vpad
         ruc = bounds[2:]
+        ruc[0] += hpad
+        ruc[1] += vpad
         size_factor = dpi/72
         width = (ruc[0]-llc[0])*size_factor
         height = (ruc[1]-llc[1])*size_factor
         translation_x = llc[0]
         translation_y = llc[1]
-        if width == 0 or height == 0:
-            self.logger.warn("Expression had zero width/height bbox!")
-            raise ValueError("Empty expression!")
         return width, height, -translation_x, -translation_y
     
     def correctBoundingBoxAspectRaito(self, dpi, boundingBox, maxWidthToHeight=3, maxHeightToWidth=1):
@@ -74,8 +82,7 @@ class LatexConverter():
         check_output(command, stderr=STDOUT, shell=True)
 
     def convertExpressionToPng(self, expression, userId, sessionId, returnPdf = False):
-        
-        preamble=""
+        preamble = ""
         try:
             preamble=self._preambleManager.getPreambleFromDatabase(userId)
             self.logger.debug("Preamble for userId %d found", userId)

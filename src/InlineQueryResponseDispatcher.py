@@ -1,5 +1,6 @@
 from multiprocessing import Process, Lock, Event
 from threading import Thread
+import re
 
 from telegram import InlineQueryResultArticle, InputTextMessageContent, \
     InlineQueryResultCachedPhoto, InlineQueryResult, TelegramError
@@ -95,7 +96,18 @@ class InlineQueryResponseDispatcher():
     
     def generateCaption(self, senderId, expression):
         if self._userOptionsManager.getCodeInCaptionOption(senderId) is True:
-            return expression[:200]
+
+            regex = r"^% *(\S+.*)"  # searching for comments, which are then only included
+
+            groups = re.findall(regex, expression, re.MULTILINE)
+
+            if len(groups) == 0:
+                return expression[:200]  # no comments, return everything (max 200 symbols)
+            else:
+                caption = ""
+                for group in groups:
+                    caption += group + "\n"
+                return caption[:-1]
         else:
             return ""
     

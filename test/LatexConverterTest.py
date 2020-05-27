@@ -40,8 +40,11 @@ class LatexConverterTest(unittest.TestCase):
     def testPdflatexHangupHandling(self):
         try:
             self.sut.pdflatex("resources/test/pdflatex_hanging_file.tex")
+            raise AssertionError("Should not reach this point!")
         except ValueError as err:
             self.assertEqual(err.args[0], "Pdflatex has likely hung up and had to be killed. Congratulations!")
+        finally:
+            check_output(["rm build/pdflatex_hanging_file*"], stderr=STDOUT, shell=True)
 
     def testConvertExpressionToPng(self):
         binaryData = self.sut.convertExpressionToPng("$x^2$", 115, "id").read()
@@ -56,7 +59,12 @@ class LatexConverterTest(unittest.TestCase):
         
     def testDeleteFilesInAllCases(self):
         self.sut.convertExpressionToPng("$x^2$", 115, "id")
-        self.assertEqual(len(os.listdir("build/")), 0)
+        files = os.listdir("build/")
+        try:
+            self.assertEqual(len(files), 0)
+        except AssertionError:
+            print(files)
+            raise
         
         try:
             self.sut.convertExpressionToPng("$$$$", 115, "id1").read()

@@ -58,7 +58,36 @@ class InlineQueryResponseDispatcherTest(unittest.TestCase):
         nextQueryArrivedEvent.is_set = Mock(return_value=True)
         self.sut.respondToInlineQuery(inline_query, nextQueryArrivedEvent)
         self.assertEqual(self.sut._bot.answerInlineQuery.call_count, 1)
-                
+
+    def testGenerateCaption(self):
+
+        test_expression = '% Test comment\n' \
+                          '%\n' \
+                          '%\n' \
+                          '$x=x + x$ % not included' \
+                          '\n' \
+                          '\n' \
+                          '% Final part'
+
+
+        self.sut._userOptionsManager.getCodeInCaptionOption = MagicMock(return_value = False)
+
+        test_caption = self.sut.generateCaption(115, test_expression)
+
+        self.assertEqual(test_caption, "")
+
+        self.sut._userOptionsManager.getCodeInCaptionOption = MagicMock(return_value = True)
+
+        correct_caption = "Test comment\nFinal part"
+        test_caption = self.sut.generateCaption(115, test_expression)
+        self.assertEqual(test_caption, correct_caption)
+
+        test_expression = "s"*201
+        correct_caption = "s"*200
+        test_caption = self.sut.generateCaption(115, test_expression)
+        self.assertEqual(test_caption, correct_caption)
+
+
 if __name__ == '__main__':
     unittest.main()
      
