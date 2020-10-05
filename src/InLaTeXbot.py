@@ -1,8 +1,14 @@
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+from time import sleep
+
 from telegram import InlineQueryResultArticle, InputTextMessageContent, \
     InlineQueryResultCachedPhoto, InlineQueryResult, TelegramError
 from telegram.ext import Updater, CommandHandler, InlineQueryHandler, \
     MessageHandler, Filters
 import html
+
+from tqdm.notebook import tqdm
 
 from src.LatexConverter import LatexConverter
 from src.PreambleManager import PreambleManager
@@ -48,6 +54,9 @@ class InLaTeXbot():
         self._updater.dispatcher.add_handler(inline_handler)
         
         self._usersRequestedCustomPreambleRegistration = set()
+
+        self._executor = ThreadPoolExecutor(max_workers=32)
+
         
     def launch(self):
         self._updater.start_polling()
@@ -156,19 +165,35 @@ class InLaTeXbot():
         update.inline_query.query = update.inline_query.query.replace("<br/>", "\n")
         self._inlineQueryResponseDispatcher.dispatchInlineQueryResponse(update.inline_query)
         
-    def broadcastHTMLMessage(self, message, userIds, parse_mode="HTML"):
-        var = input("Are you sure? yes/[no]: ")
-        if var != "yes":
-            print("Aborting!")
-            return
-            
-        for userId in userIds:
-            print("\rUser:", userId, end="", flush=True) 
+    def broadcastHTMLMessage(self, message, userIds, parse_mode="HTML", force = False):
+        if not force:
+            print(message)
+            var = input("Are you sure? yes/[no]: ")
+            if var != "yes":
+                print("Aborting!")
+                return
+
+        send_task = partial(self._sendMessageToUser, message = message, parse_mode=parse_mode)
+        for userId in tqdm(self._executor.map(send_task, userIds), total=len(userIds), smoothing=0):
+            if userId > 0:
+                self.logger.debug("Broadcast message successfully for user %d"%userId)
+            else:
+                self.logger.debug("Failed to broadcast message for user %d"%-userId)
+
+
+    def _sendMessageToUser(self, userId, message, parse_mode = "HTML"):
+        attempt = 0
+        while attempt < 10:
             try:
                 self._updater.bot.sendMessage(userId, message, parse_mode=parse_mode)
+                return userId
             except TelegramError as err:
+                attempt += 1
                 self.logger.warn("Could not broadcast message for %d, error: %s", userId, str(err))
-            
+                sleep(15)
+        return -userId
+
+
 if __name__ == '__main__':
     bot = InLaTeXbot()
     bot.launch()
