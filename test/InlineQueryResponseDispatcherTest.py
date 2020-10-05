@@ -59,31 +59,78 @@ class InlineQueryResponseDispatcherTest(unittest.TestCase):
         self.sut.respondToInlineQuery(inline_query, nextQueryArrivedEvent)
         self.assertEqual(self.sut._bot.answerInlineQuery.call_count, 1)
 
-    def testGenerateCaption(self):
+    def testProcessMultilineComments(self):
+        self.sut._userOptionsManager.getCodeInCaptionOption = MagicMock(return_value = False)
 
-        test_expression = '% Test comment\n' \
+        test_expression = '%*\n' \
+                          'Test comment\n\n\n' \
+                          '*%\n' \
                           '%\n' \
                           '%\n' \
                           '$x=x + x$ % not included' \
                           '\n' \
                           '\n' \
                           '% Final part'
+        correct_processed_expression = '\iffalse inlatexbot\n' \
+                          'Test comment\n\n\n' \
+                          'inlatexbot \\fi\n' \
+                          '%\n' \
+                          '%\n' \
+                          '$x=x + x$ % not included' \
+                          '\n' \
+                          '\n' \
+                          '% Final part'
+        test_processed_expression = self.sut.processMultilineComments(115, test_expression)
+        self.assertEqual(test_processed_expression, correct_processed_expression)
 
+        test_expression = "$x^2$\n" \
+                          "%*\n" \
+                          "multiline comment\n"\
+                          "*%\n"
+
+        correct_processed_expression = "$x^2$\n" \
+                          "\iffalse inlatexbot\n" \
+                          "multiline comment\n"\
+                          "inlatexbot \\fi\n"
+
+        test_processed_expression = self.sut.processMultilineComments(115, test_expression)
+        self.assertEqual(test_processed_expression, correct_processed_expression)
+
+    def testGenerateCaption(self):
 
         self.sut._userOptionsManager.getCodeInCaptionOption = MagicMock(return_value = False)
-
-        test_caption = self.sut.generateCaption(115, test_expression)
-
-        self.assertEqual(test_caption, "")
-
-        self.sut._userOptionsManager.getCodeInCaptionOption = MagicMock(return_value = True)
-
-        correct_caption = "Test comment\nFinal part"
+        test_expression = '%Test comment\n' \
+                          '%\n' \
+                          '%\n' \
+                          '$x=x + x$ % not included' \
+                          '\n' \
+                          '\n' \
+                          '% Final part\n' \
+                          '\iffalse inlatexbot\n' \
+                          'Multiline comment\n\n' \
+                          'inlatexbot \\fi'
+        correct_caption = "Test comment\n Final part\nMultiline comment\n\n"
         test_caption = self.sut.generateCaption(115, test_expression)
         self.assertEqual(test_caption, correct_caption)
 
-        test_expression = "s"*201
-        correct_caption = "s"*200
+        test_expression = "$x^2$\n" \
+                          "% Test comment\n" \
+                          "non comment\n" \
+                          "%Comment in the end"
+        correct_caption = " Test comment\nComment in the end"
+        test_caption = self.sut.generateCaption(115, test_expression)
+        self.assertEqual(test_caption, correct_caption)
+
+        self.sut._userOptionsManager.getCodeInCaptionOption = MagicMock(return_value = False)
+        test_expression = "x"
+        correct_caption = ""
+        test_caption = self.sut.generateCaption(115, test_expression)
+        self.assertEqual(test_caption, correct_caption)
+
+
+        self.sut._userOptionsManager.getCodeInCaptionOption = MagicMock(return_value = True)
+        test_expression = "x"*201
+        correct_caption = "x"*200
         test_caption = self.sut.generateCaption(115, test_expression)
         self.assertEqual(test_caption, correct_caption)
 

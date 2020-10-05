@@ -34,7 +34,7 @@ class MessageQueryResponseDispatcher():
         
         errorMessage = None
         try:
-            imageStream, pdfStream = self._latexConverter.convertExpressionToPng(expression, senderId, str(messageId)+str(senderId), returnPdf=True)
+            imageStream, pdfStream = self._latexConverter.convertExpression(expression, senderId, str(messageId) + str(senderId), returnPdf=True)
             self._bot.sendDocument(chatId, pdfStream, filename="expression.pdf")
             self._bot.sendPhoto(chatId, imageStream)
         except ValueError as err:

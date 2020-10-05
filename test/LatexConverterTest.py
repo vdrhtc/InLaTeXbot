@@ -47,19 +47,20 @@ class LatexConverterTest(unittest.TestCase):
             check_output(["rm build/pdflatex_hanging_file*"], stderr=STDOUT, shell=True)
 
     def testConvertExpressionToPng(self):
-        binaryData = self.sut.convertExpressionToPng("$x^2$", 115, "id").read()
+        binaryData = self.sut.convertExpression("$x^2$", 115, "id").read()
         with open('resources/test/xsquared.png', "rb") as f:
             correctBinaryData = f.read()
         self.assertAlmostEqual(len(binaryData), len(correctBinaryData), delta=50)
         
-        binaryData = self.sut.convertExpressionToPng("$x^2$"*10, 115, "id").read()
+        binaryData = self.sut.convertExpression("$x^2$" * 10, 115, "id").read()
         with open('resources/test/xsquared10times.png', "rb") as f:
             correctBinaryData = f.read()
         self.assertAlmostEqual(len(binaryData), len(correctBinaryData), delta=50)
         
     def testDeleteFilesInAllCases(self):
-        self.sut.convertExpressionToPng("$x^2$", 115, "id")
+        self.sut.convertExpression("$x^2$", 115, "id")
         files = os.listdir("build/")
+
         try:
             self.assertEqual(len(files), 0)
         except AssertionError:
@@ -67,21 +68,27 @@ class LatexConverterTest(unittest.TestCase):
             raise
         
         try:
-            self.sut.convertExpressionToPng("$$$$", 115, "id1").read()
+            self.sut.convertExpression("$$$$", 115, "id1").read()
         except ValueError:
             self.assertEqual(len(os.listdir("build/")), 0)
         
         try:
-            self.sut.convertExpressionToPng(r"lo \asdasd", 115, "id2").read()
+            self.sut.convertExpression(r"lo \asdasd", 115, "id2").read()
         except ValueError:
             self.assertEqual(len(os.listdir("build/")), 0)
     
     def testEmptyQuery(self):
         with self.assertRaises(ValueError):
-            self.sut.convertExpressionToPng("$$$$", 115, "id").read()
-            
+            self.sut.convertExpression("$$$$", 115, "id").read()
+
+        with self.assertRaises(ValueError):
+            self.sut.convertExpression(" %comment", 115, "id").read()
+
+    def testIgnoreInternalPreambles(self):
+        self.sut.convertExpression(r"\documentclass{article} \begin{document} \LaTeX \end{document}", 115, "id")
+
     def testReturnPdf(self):
-        pdfBinaryData = self.sut.convertExpressionToPng("lol", 115, "id", True)[1].read()
+        pdfBinaryData = self.sut.convertExpression("lol", 115, "id", True)[1].read()
         with open('resources/test/cropped.pdf', "rb") as f:
             correctBinaryData = f.read()
         self.assertAlmostEqual(len(pdfBinaryData), len(correctBinaryData), delta=50)

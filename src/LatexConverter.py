@@ -3,6 +3,8 @@ from subprocess import check_output, CalledProcessError, STDOUT, TimeoutExpired
 from src.PreambleManager import PreambleManager
 from src.LoggingServer import LoggingServer
 import io
+import re
+
 
 class LatexConverter():
 
@@ -13,9 +15,15 @@ class LatexConverter():
          self._userOptionsManager = userOptionsManager
 
     def extractBoundingBox(self, dpi, pathToPdf):
-        bbox = check_output("gs -q -dBATCH -dNOPAUSE -sDEVICE=bbox "+pathToPdf, 
-                            stderr=STDOUT, shell=True).decode("ascii")
-        bounds = [int(_) for _ in bbox[bbox.index(":")+2:bbox.index("\n")].split(" ")]
+        try:
+            bbox = check_output("gs -q -dBATCH -dNOPAUSE -sDEVICE=bbox " + pathToPdf,
+                                stderr=STDOUT, shell=True).decode("ascii")
+        except CalledProcessError:
+            raise ValueError("Could not extract bounding box! Empty expression?")
+        try:
+            bounds = [int(_) for _ in bbox[bbox.index(":")+2:bbox.index("\n")].split(" ")]
+        except ValueError:
+            raise ValueError("Could not parse bounding box! Empty expression?")
 
         if bounds[0] == bounds[2] or bounds[1] == bounds[3]:
             self.logger.warn("Expression had zero width/height bbox!")
@@ -65,7 +73,7 @@ class LatexConverter():
                 msg = "Pdflatex has likely hung up and had to be killed. Congratulations!"
                 raise ValueError(msg)
     
-    def cropPdf(self, sessionId):
+    def cropPdf(self, sessionId): # TODO: this is intersecting with the png part
         bbox = check_output("gs -q -dBATCH -dNOPAUSE -sDEVICE=bbox build/expression_file_%s.pdf"%sessionId, 
                             stderr=STDOUT, shell=True).decode("ascii")
         bounds = tuple([int(_) for _ in bbox[bbox.index(":")+2:bbox.index("\n")].split(" ")])
@@ -81,17 +89,23 @@ class LatexConverter():
                     %((sessionId, dpi)+bbox+(sessionId,))
         check_output(command, stderr=STDOUT, shell=True)
 
-    def convertExpressionToPng(self, expression, userId, sessionId, returnPdf = False):
-        preamble = ""
-        try:
-            preamble=self._preambleManager.getPreambleFromDatabase(userId)
-            self.logger.debug("Preamble for userId %d found", userId)
-        except KeyError:
-            self.logger.debug("Preamble for userId %d not found, using default preamble", userId)
-            preamble=self._preambleManager.getDefaultPreamble()
-            
-        fileString = preamble+"\n\\begin{document}\n"+expression+"\n\\end{document}"
-            
+    def convertExpression(self, expression, userId, sessionId, returnPdf = False):
+
+
+
+
+        if r"\documentclass" in expression:
+            fileString = expression
+        else:
+            try:
+                preamble = self._preambleManager.getPreambleFromDatabase(userId)
+                self.logger.debug("Preamble for userId %d found", userId)
+            except KeyError:
+                self.logger.debug("Preamble for userId %d not found, using default preamble", userId)
+                preamble = self._preambleManager.getDefaultPreamble()
+            finally:
+                fileString = preamble+"\n\\begin{document}\n"+expression+"\n\\end{document}"
+
         with open("build/expression_file_%s.tex"%sessionId, "w+") as f:
             f.write(fileString)
         

@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock, MagicMock, call
 from src.InLaTeXbot import InLaTeXbot
 from time import sleep
 
@@ -110,6 +110,25 @@ class InLaTeXbotTest(unittest.TestCase):
         self.sut.dispatchTextMessage(self.bot, update)
         
         self.sut._messageQueryResponseDispatcher.dispatchMessageQueryResponse.assert_called_with(message)
+
+
+    def testBroadcasting(self):
+
+        def wait(*args, **kwargs):
+            sleep(1)
+
+        self.sut._updater = MagicMock()
+        self.sut._updater.bot = MagicMock()
+        self.sut._updater.bot.sendMessage = MagicMock(side_effect = wait)
+
+        m = "Test message: hello! Sorry, you were not supposed to recieve this..." \
+            " I'm just trying something with broadcasting =)"
+
+        self.sut.broadcastHTMLMessage(m, range(20), parse_mode="test", force=True)
+
+        calls = [call(id, m, parse_mode = "test") for id in range(20)]
+
+        self.sut._updater.bot.sendMessage.assert_has_calls(calls)
         
 if __name__ == '__main__':
     unittest.main()

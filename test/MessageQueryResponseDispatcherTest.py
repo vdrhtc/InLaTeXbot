@@ -24,7 +24,7 @@ class MessageQueryResponseDispatcherTest(unittest.TestCase):
         
         bot = Mock()
         bot.sendPhoto = Mock()
-        self.latexConverter.convertExpressionToPng = Mock(return_value=(Mock(), Mock()))
+        self.latexConverter.convertExpression = Mock(return_value=(Mock(), Mock()))
         
         self.sut.respondToMessageQuery(message)
         
