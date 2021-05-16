@@ -64,7 +64,7 @@ class InLaTeXbot():
     def stop(self):
         self._updater.stop()
     
-    def onStart(self, bot, update):
+    def onStart(self, update, context):
         senderId = update.message.from_user.id 
         if not senderId in self._usersManager.getKnownUsers():
             self._usersManager.setUser(senderId, {})
@@ -75,7 +75,7 @@ class InLaTeXbot():
             self._updater.bot.sendPhoto(update.message.from_user.id, f)
         update.message.reply_text(self._resourceManager.getString("greeting_line_two"))
 
-    def onAbort(self, bot, update):
+    def onAbort(self, update, context):
         senderId = update.message.from_user.id
         try:
             self._usersRequestedCustomPreambleRegistration.remove(senderId)
@@ -83,11 +83,11 @@ class InLaTeXbot():
         except KeyError:
             update.message.reply_text(self._resourceManager.getString("nothing_to_abort"))            
             
-    def onHelp(self, bot, update):
+    def onHelp(self, update, context):
         with open("resources/available_commands.html", "r") as f:
             update.message.reply_text(f.read(), parse_mode="HTML")
         
-    def onGetMyPreamble(self, bot, update):
+    def onGetMyPreamble(self, update, context):
         try:
             preamble = self._preambleManager.getPreambleFromDatabase(update.message.from_user.id)
             update.message.reply_text(self._resourceManager.getString("your_preamble_custom")+preamble)
@@ -95,30 +95,30 @@ class InLaTeXbot():
             preamble = self._preambleManager.getDefaultPreamble()
             update.message.reply_text(self._resourceManager.getString("your_preamble_default")+preamble)
             
-    def onGetDefaultPreamble(self, bot, update):
+    def onGetDefaultPreamble(self, update, context):
         preamble = self._preambleManager.getDefaultPreamble()
         update.message.reply_text(self._resourceManager.getString("default_preamble")+preamble)
     
-    def onSetCustomPreamble(self, bot, update):
+    def onSetCustomPreamble(self, update, context):
         self._usersRequestedCustomPreambleRegistration.add(update.message.from_user.id)
         update.message.reply_text(self._resourceManager.getString("register_preamble"))
     
-    def dispatchTextMessage(self, bot, messageUpdate):
+    def dispatchTextMessage(self, messageUpdate, context):
         for messageFilter in self._messageFilters:
-            messageUpdate = messageFilter(bot, messageUpdate)
+            messageUpdate = messageFilter(messageUpdate, context)
             if messageUpdate is None:
                 # Update consumed
                 return
                 
-    def filterPreamble(self, bot, update):
+    def filterPreamble(self, update, context):
         senderId = update.message.from_user.id
         if senderId in self._usersRequestedCustomPreambleRegistration:
             self.logger.debug("Filtered preamble text message")
-            self.onPreambleArrived(bot, update)
+            self.onPreambleArrived(update, context)
         else:
             return update
     
-    def onPreambleArrived(self, bot, update):
+    def onPreambleArrived(self, update, context):
         preamble = update.message.text
         senderId = update.message.from_user.id
         update.message.reply_text(self._resourceManager.getString("checking_preamble"))
@@ -131,23 +131,23 @@ class InLaTeXbot():
         else:
             update.message.reply_text(preamble_error_message)
             
-    def filterExpression(self, bot, update):
+    def filterExpression(self, update, context):
         # Always consumes, last filter
         self.logger.debug("Filtered expression text message")
-        self.onExpressionArrived(bot, update)
+        self.onExpressionArrived(update, context)
     
-    def onExpressionArrived(self, bot, update):
+    def onExpressionArrived(self, update, context):
         self._messageQueryResponseDispatcher.dispatchMessageQueryResponse(update.message)
         
-    def onSetCodeInCaptionOn(self, bot, update):
+    def onSetCodeInCaptionOn(self, update, context):
         userId  = update.message.from_user.id
         self._userOptionsManager.setCodeInCaptionOption(userId, True)
     
-    def onSetCodeInCaptionOff(self, bot, update):
+    def onSetCodeInCaptionOff(self, update, context):
         userId = update.message.from_user.id
         self._userOptionsManager.setCodeInCaptionOption(userId, False)
     
-    def onSetDpi(self, bot, update):
+    def onSetDpi(self, update, context):
         userId = update.message.from_user.id
         try:
             dpi = int(update.message.text[8:])
@@ -158,7 +158,7 @@ class InLaTeXbot():
         except ValueError:
             update.message.reply_text(self._resourceManager.getString("dpi_value_error"))
         
-    def onInlineQuery(self, bot, update):
+    def onInlineQuery(self, update, context):
         if not update.inline_query.query:
             return
         update.inline_query.query = html.unescape(update.inline_query.query)

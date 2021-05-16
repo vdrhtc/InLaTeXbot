@@ -2,6 +2,7 @@ from multiprocessing import Process, Lock, Event
 from threading import Thread
 
 from telegram import TelegramError
+from telegram.error import NetworkError
 
 from src.LoggingServer import LoggingServer
 
@@ -42,6 +43,8 @@ class MessageQueryResponseDispatcher():
         except TelegramError as err:
             errorMessage = self._resourceManager.getString("telegram_error")+str(err)
             self.logger.warn(errorMessage)
+        except Exception as err:
+            self.logger.warn("Uncaught exception: " + str(err))
         finally:
             if not errorMessage is None:
                 self._bot.sendMessage(chatId, errorMessage)
