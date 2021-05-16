@@ -5,7 +5,7 @@ from time import sleep
 from telegram import InlineQueryResultArticle, InputTextMessageContent, \
     InlineQueryResultCachedPhoto, InlineQueryResult, TelegramError
 from telegram.ext import Updater, CommandHandler, InlineQueryHandler, \
-    MessageHandler, Filters
+    MessageHandler, Filters, DispatcherHandlerStop
 import html
 
 from tqdm.notebook import tqdm
@@ -75,17 +75,23 @@ class InLaTeXbot():
             self._updater.bot.sendPhoto(update.message.from_user.id, f)
         update.message.reply_text(self._resourceManager.getString("greeting_line_two"))
 
+        raise DispatcherHandlerStop
+
     def onAbort(self, update, context):
         senderId = update.message.from_user.id
         try:
             self._usersRequestedCustomPreambleRegistration.remove(senderId)
             update.message.reply_text(self._resourceManager.getString("preamble_registration_aborted"))            
         except KeyError:
-            update.message.reply_text(self._resourceManager.getString("nothing_to_abort"))            
+            update.message.reply_text(self._resourceManager.getString("nothing_to_abort"))
+
+        raise DispatcherHandlerStop
             
     def onHelp(self, update, context):
         with open("resources/available_commands.html", "r") as f:
             update.message.reply_text(f.read(), parse_mode="HTML")
+
+        raise DispatcherHandlerStop
         
     def onGetMyPreamble(self, update, context):
         try:
@@ -94,21 +100,27 @@ class InLaTeXbot():
         except KeyError:
             preamble = self._preambleManager.getDefaultPreamble()
             update.message.reply_text(self._resourceManager.getString("your_preamble_default")+preamble)
+
+        raise DispatcherHandlerStop
             
     def onGetDefaultPreamble(self, update, context):
         preamble = self._preambleManager.getDefaultPreamble()
         update.message.reply_text(self._resourceManager.getString("default_preamble")+preamble)
+
+        raise DispatcherHandlerStop
     
     def onSetCustomPreamble(self, update, context):
         self._usersRequestedCustomPreambleRegistration.add(update.message.from_user.id)
         update.message.reply_text(self._resourceManager.getString("register_preamble"))
+
+        raise DispatcherHandlerStop
     
     def dispatchTextMessage(self, messageUpdate, context):
         for messageFilter in self._messageFilters:
             messageUpdate = messageFilter(messageUpdate, context)
             if messageUpdate is None:
                 # Update consumed
-                return
+                raise DispatcherHandlerStop
                 
     def filterPreamble(self, update, context):
         senderId = update.message.from_user.id
@@ -142,11 +154,15 @@ class InLaTeXbot():
     def onSetCodeInCaptionOn(self, update, context):
         userId  = update.message.from_user.id
         self._userOptionsManager.setCodeInCaptionOption(userId, True)
+
+        raise DispatcherHandlerStop
     
     def onSetCodeInCaptionOff(self, update, context):
         userId = update.message.from_user.id
         self._userOptionsManager.setCodeInCaptionOption(userId, False)
-    
+
+        raise DispatcherHandlerStop
+
     def onSetDpi(self, update, context):
         userId = update.message.from_user.id
         try:
@@ -157,6 +173,8 @@ class InLaTeXbot():
             update.message.reply_text(self._resourceManager.getString("dpi_set")%dpi)
         except ValueError:
             update.message.reply_text(self._resourceManager.getString("dpi_value_error"))
+
+        raise DispatcherHandlerStop
         
     def onInlineQuery(self, update, context):
         if not update.inline_query.query:
@@ -164,6 +182,8 @@ class InLaTeXbot():
         update.inline_query.query = html.unescape(update.inline_query.query)
         update.inline_query.query = update.inline_query.query.replace("<br/>", "\n")
         self._inlineQueryResponseDispatcher.dispatchInlineQueryResponse(update.inline_query)
+
+        raise DispatcherHandlerStop
         
     def broadcastHTMLMessage(self, message, userIds, parse_mode="HTML", force = False):
         if not force:

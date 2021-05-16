@@ -17,7 +17,7 @@ class MessageQueryResponseDispatcher():
             
     def dispatchMessageQueryResponse(self, message):
         
-        self.logger.debug("Received message message: "+message.text+\
+        self.logger.debug("Received message: "+message.text+\
                    ", id: "+str(message.message_id)+", from: "+str(message.chat.id))
                                 
         responder = Process(target = self.respondToMessageQuery, args=[message])
