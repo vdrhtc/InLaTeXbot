@@ -34,3 +34,5 @@ The preamble length is currently limited by 4000 characters as the longest messa
 
 Bot should be currently online, so in case it's down it's either maintenance or some emergency. Also, feel free to open an issue if you find a bug or contact me <a href=http://t.me/vdrhtc>directly</a> in Telegram should you have any related questions.
 
+## Support the project
+https://www.donationalerts.com/r/glebfedorov
