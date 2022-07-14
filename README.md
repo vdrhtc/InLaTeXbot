@@ -1,3 +1,5 @@
+14.07.22 -- IMPORTANT NOTICE: bot will be offline until 03.08.22
+
 <img src=https://cloud.githubusercontent.com/assets/3819012/21799537/1dab0e90-d733-11e6-88ab-76ebd37275c7.jpg /> 
 
 Inline LaTeX bot for <a href=https://telegram.org>Telegram</a> messenger to send pictures with any LaTeX content to anyone from any device. Find it here: http://t.me/InLaTeXbot. 
