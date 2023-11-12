@@ -32,7 +32,7 @@ The expression length is limited by the length of the inline query to approximat
 
 The preamble length is currently limited by 4000 characters as the longest messages that Telegram can send in one piece are of 4096 chars.
 
-Bot should be currently online, so in case it's down it's either maintenance or some emergency. Also, feel free to open an issue if you find a bug or contact me <a href=http://t.me/vdrhtc>directly</a> in Telegram should you have any related questions.
+Bot should be currently online, so in case it's down it's either maintenance or some emergency. Also, feel free to open an issue if you find a bug or contact me <a href=http://t.me/fedorovgp>directly</a> in Telegram should you have any related questions.
 
 ## Support the project
 https://www.donationalerts.com/r/glebfedorov
