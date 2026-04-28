@@ -41,6 +41,7 @@ class InlineQueryResponseDispatcher():
 
     def respondToInlineQuery(self, inline_query, nextQueryArrivedEvent):
         senderId = inline_query.from_user.id
+        sender = inline_query.from_user
         queryId = inline_query.id
         expression = inline_query.query
 
@@ -64,7 +65,8 @@ class InlineQueryResponseDispatcher():
         finally:
             if not self.skipForNewerQuery(nextQueryArrivedEvent, senderId, expression):
                 self._bot.answerInlineQuery(queryId, [result], cache_time=0)
-                self.logger.debug("Answered to inline query from %d, expression: %s", senderId, expression)
+                self.logger.debug("Answered to inline query from %s, expression: %s", senderId, expression)
+                self.logger.debug("-------- Sender info: %s", str(sender))
 
     def skipForNewerQuery(self, nextQueryArrivedEvent, senderId, expression):
         if nextQueryArrivedEvent.is_set():
@@ -113,7 +115,7 @@ class InlineQueryResponseDispatcher():
 
     def generateCaption(self, senderId, expression):
         if self._userOptionsManager.getCodeInCaptionOption(senderId) is True:
-            return expression[:200]  # no comments, return everything (max 200 symbols)
+            return expression[:1000]  # no comments, return everything (max 1000 symbols)
         else:
             regex = r"^%( *\S+.*?)$|\\iffalse inlatexbot\n(.+?)inlatexbot \\fi"  # searching for comments, which are then only included
 
